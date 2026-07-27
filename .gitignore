@@ -1,0 +1,10 @@
+# training artifacts & datasets (hundreds of MB; reproduce via exp/*.py)
+runs/
+runs_*.log
+
+# python
+__pycache__/
+*.pyc
+
+# third-party QA script copied from the dataviz skill (not part of the app)
+app/js/validate_palette.js
