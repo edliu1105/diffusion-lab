@@ -3,14 +3,17 @@
 一间为"真懂"而建的实验室:所有断言由本机训练的真实模型 + 浏览器内实时计算支撑。
 交付物是浏览器里的交互式大师课:`app/index.html`。
 
-## 启动
+**在线版(GitHub Pages,随时可开):https://edliu1105.github.io/diffusion-lab/**
+
+## 本地启动
 
 ```bash
-python -m http.server 8737 --directory app
-# 打开 http://localhost:8737
+python serve.py
+# 打开 http://localhost:8737(no-store 头,改代码即刷即见)
 ```
 
 (或在 Claude Code 里直接用预览:`.claude/launch.json` 已配置 `lab`。)
+在线版部署:`app/` 目录以 `git subtree split -P app -b gh-pages` 切出并推送,Pages 指向 gh-pages 根。
 
 ## 里面有什么
 
