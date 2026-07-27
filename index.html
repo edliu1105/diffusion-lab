@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>扩散实验室 · 一个场,五件衣服</title>
+<link rel="stylesheet" href="css/lab.css">
+</head>
+<body>
+
+<aside id="rail">
+  <div class="brand">DIFFUSION BENCH</div>
+  <h1>扩散实验室</h1>
+  <div class="sub">真模型 · 真张量 · 真数值</div>
+  <nav id="toc"></nav>
+  <canvas id="lamrail"></canvas>
+  <div class="railnote">这根光谱条是全站的坐标轴:<br>紫 = 纯噪声(logSNR→−∞)<br>金 = 干净数据(logSNR→+∞)</div>
+</aside>
+
+<main>
+
+<div id="hero">
+  <div class="eyebrow">面向一位工程师的大师课 · 交互式 · 所有演示由本机训练的真实模型驱动</div>
+  <h1>整个领域只学一个对象:<b>E[x₀|x_t]</b><br>其余全部是坐标系。</h1>
+  <p class="lede">DDPM、score matching、DDIM、EDM、flow matching——它们不是五种模型,是同一个学到的向量场穿五件衣服。这个实验室的目标是把这句话从"听说过"变成"手感":下面每一张图都是刚刚在你这台机器上训练出来的网络,现在正运行在你的浏览器里。可以拨动的东西,请拨动它。</p>
+  <canvas id="herostrip"></canvas>
+  <div class="stripcap"><span>x₁ ~ N(0, I)&nbsp;&nbsp;λ=−8.5</span><span>← 真实 flow matching 模型的 24 步 Euler 积分(每次刷新重新采样)→</span><span>x₀ ~ p(data)&nbsp;&nbsp;λ=+9</span></div>
+</div>
+
+<section class="ch" id="s0">
+  <div class="eyebrow">§0 · <span class="mode">使用说明</span></div>
+  <h2>怎么用这个实验室</h2>
+  <div id="c-s0"></div>
+</section>
+
+<section class="ch" id="s1">
+  <div class="eyebrow">§1 · <span class="mode">叙事</span> · 先回答"学什么、谁在用"</div>
+  <h2>地图与优先级</h2>
+  <div class="dek">Survey 先行:formulation 家族里什么最值得学、真正赚钱的产品各自用什么、以及为什么。全部结论标注 <span class="tag f">事实</span> <span class="tag i">推断</span> <span class="tag j">判断</span>。</div>
+  <div id="c-s1"></div>
+</section>
+
+<section class="ch" id="s2">
+  <div class="eyebrow">§2 · <span class="mode exp">实验</span> · 第一性原理</div>
+  <h2>一个场,五件衣服</h2>
+  <div class="dek">同一份 2D 数据,按三种"方言"原生训练的三个网络,和一个解析真值。切换视图,亲眼确认:ε̂、x̂₀、v̂、score、u 是同一支箭头的五种记法。</div>
+  <div id="c-s2"></div>
+</section>
+
+<section class="ch" id="s3">
+  <div class="eyebrow">§3 · <span class="mode exp">实验</span> · 训练闭环</div>
+  <h2>训练循环显微镜</h2>
+  <div class="dek">一步训练,逐行拆开,三种方言并排。每一行右边是这一行真实产出的数值。之后:loss 曲线的真实形状、理论地板、以及"weighting 才是各家真正的分歧点"。</div>
+  <div id="c-s3"></div>
+</section>
+
+<section class="ch" id="s4">
+  <div class="eyebrow">§4 · <span class="mode exp">实验</span> · 张量解剖</div>
+  <h2>预测目标解剖室(MNIST)</h2>
+  <div class="dek">拖动噪声等级,看 x_t、x̂₀、ε̂、v̂、û、score 六个张量在一个真实 UNet 里长什么样、数值多大、往哪个极限退化。</div>
+  <div id="c-s4"></div>
+</section>
+
+<section class="ch" id="s5">
+  <div class="eyebrow">§5 · <span class="mode exp">实验</span> · 推理闭环</div>
+  <h2>采样 = 数值积分</h2>
+  <div class="dek">DDPM ancestral、DDIM、EDM-Heun、FM-Euler 在同一个模型上并排走。逐步读数、同种子对比、NFE-误差曲线,以及两个当场完成的数值证明。</div>
+  <div id="c-s5"></div>
+</section>
+
+<section class="ch" id="s6">
+  <div class="eyebrow">§6 · <span class="mode exp">实验</span> · 条件与引导</div>
+  <h2>CFG:对分布做算术</h2>
+  <div class="dek">全领域最大的实用杠杆,也是最被误解的公式。在一个有解析真值的世界里拨动 w,看引导到底把分布拧成了什么形状。</div>
+  <div id="c-s6"></div>
+</section>
+
+<section class="ch" id="s7">
+  <div class="eyebrow">§7 · <span class="mode exp">实验</span> · 少步生成</div>
+  <h2>蒸馏:把积分焊进权重</h2>
+  <div class="dek">几十步压到一步,压掉的是什么?轨迹曲率、mode 边界的缝、朴素蒸馏为什么会糊——先在看得见的世界里弄懂,再看各条路线图。</div>
+  <div id="c-s7"></div>
+</section>
+
+<section class="ch" id="s8">
+  <div class="eyebrow">§8 · <span class="mode">叙事</span> · 前沿</div>
+  <h2>实时视频与世界模型</h2>
+  <div class="dek">从"整段离线去噪"到 24fps 可交互:因果化的三步手术、误差累积的对策谱系、以及这条线现在真实卡在哪。</div>
+  <div id="c-s8"></div>
+</section>
+
+<section class="ch" id="s9">
+  <div class="eyebrow">§9 · <span class="mode">叙事</span> · 内化</div>
+  <h2>心智模型 · 分歧 · 拷问</h2>
+  <div class="dek">五个专家共享的心智模型;三个真分歧和每一方最硬的论据;十道用来区分"真懂"和"背书"的题,附深浅答案的样子。</div>
+  <div id="c-s9"></div>
+</section>
+
+<section class="ch" id="s10">
+  <div class="eyebrow">§10 · <span class="mode exp">实验</span> · 战伤</div>
+  <h2>故障博物馆</h2>
+  <div class="dek">每一件展品都是真实复现:带 terminal-SNR bug 的模型就在隔壁训练出来,灰底是它自己长出来的。之后是排查决策树。</div>
+  <div id="c-s10"></div>
+</section>
+
+<section class="ch" id="s11">
+  <div class="eyebrow">§11 · 附录</div>
+  <h2>速查与复现</h2>
+  <div id="c-s11"></div>
+</section>
+
+<div class="footnote">
+  本实验室的一切数字都可复现:训练代码在 <code>exp/</code>,浏览器端数学在 <code>app/js/</code>,两边用 fixtures 逐位对拍(附录 11.3)。
+  内容标注体系:<span class="tag f">事实</span> 有公开来源/可当场验证 · <span class="tag i">推断</span> 由公开信息推得,未经官方确认 · <span class="tag j">判断</span> 我的立场,可以跟我吵。
+</div>
+
+</main>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
