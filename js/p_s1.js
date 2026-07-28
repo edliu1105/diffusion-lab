@@ -41,7 +41,7 @@ export async function init(mount) {
     <tr><td><b>GPT-4o / gpt-image 系</b>(OpenAI)</td><td>自回归 token 主干 + 扩散式解码;掀起 AR-图像复兴的那一枪(2025-03)</td><td><span class="tag i">推(官方仅给系统卡级描述)</span></td></tr>
     <tr><td><b>Imagen 4 / Nano Banana 系</b>(Google)</td><td>latent diffusion;与 Gemini 栈融合,编辑/一致性为卖点</td><td><span class="tag i">推</span></td></tr>
     <tr><td><b>HunyuanImage 3.0</b>(腾讯,开源)</td><td>AR 框架 + 扩散解码的统一多模态——混合派的公开样本</td><td><span class="tag f">F</span></td></tr>
-    <tr><td><b>Sora 2</b>(OpenAI)</td><td>时空 patch DiT 扩散 + 原生音频;物理真实感标杆</td><td><span class="tag i">推(架构沿革自 Sora 技报)</span></td></tr>
+    <tr><td><b>Sora 2</b>(OpenAI,<span class="deadline">已停服</span>)</td><td>时空 patch DiT 扩散 + 原生音频,曾是物理真实感标杆;2026-03-24 官宣停服、04-26 关闭应用、API 于 09-24 日落。技术遗产(spacetime patches 的词汇与物理观感标准)仍在全行业流通。教训:<b>产品名 ≠ 技术路线名,产品节奏可以快过模型生命周期</b></td><td><span class="tag f">F(停服时间线,检索 2026-07;此行曾误标为在役,经同行文档比对后订正)</span></td></tr>
     <tr><td><b>Veo 3.1</b>(Google)</td><td>latent 视频扩散 + 原生 48kHz 音频,4K;当前综合口碑第一</td><td><span class="tag f">F/推混合</span></td></tr>
     <tr><td><b>Kling 3.0/O3</b>(快手)、<b>Seedance 2.0</b>(字节)</td><td>DiT 视频扩散系;Kling 走性价比+动作控制</td><td><span class="tag i">推</span></td></tr>
     <tr><td><b>Wan 2.x / Hunyuan Video</b>(开源)</td><td>开源视频 FM/扩散基座——想读真代码从这进</td><td><span class="tag f">F</span></td></tr>
