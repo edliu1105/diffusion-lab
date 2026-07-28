@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<title>扩散模型:一个对象,一根轴</title>
+<script src="assets/js/gsap.min.js"></script>
+<script src="assets/js/mathlib.js"></script>
+<script src="assets/js/data_models.js"></script>
+<script src="assets/js/data_mnist.js"></script>
+<script src="assets/js/data_drift.js"></script>
+<script src="assets/js/data_timing.js"></script>
+<script src="assets/js/scenes_core.js"></script>
+<script src="assets/js/scenes_late.js"></script>
+<style>
+  @font-face { font-family: 'Noto Sans SC'; src: url('assets/fonts/NotoSansSC-Regular.otf'); font-weight: 400; }
+  @font-face { font-family: 'Noto Sans SC'; src: url('assets/fonts/NotoSansSC-Bold.otf'); font-weight: 700; }
+  @font-face { font-family: 'JetBrains Mono'; src: url('assets/fonts/JetBrainsMono-Regular.ttf'); font-weight: 400; }
+  @font-face { font-family: 'JetBrains Mono'; src: url('assets/fonts/JetBrainsMono-Bold.ttf'); font-weight: 700; }
+  body { margin: 0; background: #0C0F14; font-family: 'Noto Sans SC', sans-serif; }
+  #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #0C0F14; }
+  #bgfill { position: absolute; inset: 0; background:
+      radial-gradient(1100px 700px at 30% 20%, rgba(110,116,238,0.07), transparent 60%),
+      radial-gradient(1000px 700px at 78% 82%, rgba(242,176,61,0.05), transparent 60%), #0C0F14; }
+  #maincv { position: absolute; inset: 0; }
+  .scene { position: absolute; inset: 0; pointer-events: none; }
+  .eyebrow { position: absolute; top: 74px; left: 120px; font: 24px 'JetBrains Mono', monospace;
+             letter-spacing: 0.3em; color: #D89A3A; }
+  .title { position: absolute; top: 104px; left: 118px; margin: 0; font-size: 54px; font-weight: 700;
+           color: #E8E4DA; letter-spacing: 0.04em; }
+  .cap { position: absolute; left: 0; right: 0; bottom: 0; height: 150px; display: flex;
+         align-items: center; justify-content: center; }
+  .cap span { display: inline-block; max-width: 1560px; padding: 14px 34px; font-size: 33px; line-height: 1.5;
+         color: #E8E4DA; background: rgba(12,15,20,0.72); border: 1px solid rgba(154,163,178,0.18);
+         border-radius: 12px; text-align: center; }
+  #s0-big { position: absolute; left: 0; right: 0; top: 120px; text-align: center; }
+  #s0-line1 { font-size: 64px; font-weight: 700; color: #E8E4DA; letter-spacing: 0.05em; }
+  #s0-line2 { font-size: 88px; font-weight: 700; color: #D89A3A; font-family: 'JetBrains Mono', 'Noto Sans SC', monospace; margin-top: 12px; }
+  #s0-line2 sub { font-size: 0.55em; }
+  #s3-code { position: absolute; top: 210px; left: 50%; transform: translateX(-50%); width: 1120px;
+             background: rgba(22,27,35,0.9); border: 2px solid rgba(154,163,178,0.25); border-radius: 14px;
+             padding: 28px 44px; }
+  .codeline { font: 30px 'JetBrains Mono', 'Noto Sans SC', monospace; color: #C9D4E4; line-height: 1.85; white-space: pre; }
+  #s3-code-2, #s3-code-5 { color: #D89A3A; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="dlab" data-start="0" data-width="1920" data-height="1080" data-duration="776.36">
+  <div id="bgfill"></div>
+  <canvas id="maincv" class="clip" width="1920" height="1080" data-start="0" data-duration="776.36" data-track-index="1"></canvas>
+<section class="clip scene" id="sc-s0" data-start="0.0" data-duration="28.544" data-track-index="2"><div id="s0-big"><div id="s0-line1">整个领域只学一个对象</div><div id="s0-line2">E[ x<sub>0</sub> | x<sub>t</sub> ]</div></div></section>
+<section class="clip scene" id="sc-s1" data-start="28.544" data-duration="89.808" data-track-index="2"><div class="eyebrow" id="s1-eyebrow">§1 · 一根轴</div><h1 class="title" id="s1-title">λ = logSNR:全课唯一的横轴</h1></section>
+<section class="clip scene" id="sc-s2" data-start="118.352" data-duration="89.064" data-track-index="2"><div class="eyebrow" id="s2-eyebrow">§2 · 五种读数</div><h1 class="title" id="s2-title">一个条件期望,五件衣服</h1></section>
+<section class="clip scene" id="sc-s3" data-start="207.416" data-duration="82.548" data-track-index="2"><div class="eyebrow" id="s3-eyebrow">§3 · 训练显微镜</div><h1 class="title" id="s3-title">六行循环 · λ 预算 · 贝叶斯地板</h1><div id="s3-code"><div class="codeline" id="s3-code-0">for step in range(N):</div><div class="codeline" id="s3-code-1">    x0   = sample_data(B)</div><div class="codeline" id="s3-code-2">    λ    = sample_noise_level()      # ① 预算</div><div class="codeline" id="s3-code-3">    ε    = randn_like(x0)</div><div class="codeline" id="s3-code-4">    x_t  = α(λ)·x0 + σ(λ)·ε</div><div class="codeline" id="s3-code-5">    loss = w(λ)·‖net(x_t,λ) − target‖²   # ② 汇率</div></div></section>
+<section class="clip scene" id="sc-s4" data-start="289.964" data-duration="83.592" data-track-index="2"><div class="eyebrow" id="s4-eyebrow">§4 · 无网络生成</div><h1 class="title" id="s4-title">闭式贝叶斯 · 复读机 · 背叛</h1></section>
+<section class="clip scene" id="sc-s5" data-start="373.556" data-duration="83.532" data-track-index="2"><div class="eyebrow" id="s5-eyebrow">§5 · 采样 = 数值积分</div><h1 class="title" id="s5-title">一条 ODE,几把尺子,一笔随机预算</h1></section>
+<section class="clip scene" id="sc-s6" data-start="457.088" data-duration="76.308" data-track-index="2"><div class="eyebrow" id="s6-eyebrow">§6 · CFG</div><h1 class="title" id="s6-title">分布的算术,与它的账单</h1></section>
+<section class="clip scene" id="sc-s7" data-start="533.396" data-duration="81.18" data-track-index="2"><div class="eyebrow" id="s7-eyebrow">§7 · 蒸馏</div><h1 class="title" id="s7-title">换学习对象:从方向场到终点映射</h1></section>
+<section class="clip scene" id="sc-s8" data-start="614.576" data-duration="102.768" data-track-index="2"><div class="eyebrow" id="s8-eyebrow">§8 · 把时间接上</div><h1 class="title" id="s8-title">因果化 · 疫苗 · 世界模型</h1></section>
+<section class="clip scene" id="sc-s9" data-start="717.344" data-duration="58.416" data-track-index="2"><div class="eyebrow" id="s9-eyebrow">§9 · 定稿</div><h1 class="title" id="s9-title">五个心智模型</h1></section>
+<div class="clip cap" id="cap-s0a" data-start="0.5" data-duration="13.414" data-track-index="3"><span>先看一个事实。屏幕上这团噪声,正在被一个真实训练过的神经网络,一步一步整理成数据。这不是示意动画,每一帧,都是那张网络的真实输出。</span></div>
+<div class="clip cap" id="cap-s0b" data-start="14.264" data-duration="13.63" data-track-index="3"><span>这节课只讲一件事。DDPM、DDIM、EDM、flow matching,这些名字背后,整个领域其实只学一个对象。搞懂它,所有公式都变成推论。</span></div>
+<div class="clip cap" id="cap-s1a" data-start="29.544" data-duration="18.214" data-track-index="3"><span>一切从一个混合式开始。把干净数据,和高斯噪声,按两个系数阿尔法和西格玛调配,得到带噪状态。注意,没有什么扩散过程。训练时每一步,都是独立地抽一个噪声等级,直接调配。</span></div>
+<div class="clip cap" id="cap-s1b" data-start="48.108" data-duration="15.79" data-track-index="3"><span>各家的调度看起来五花八门,但真正要紧的,只有噪声和信号的比值。把它取对数,就是这根贯穿全课的轴,log S N R,记作 lambda。左端纯噪声,右端干净数据。</span></div>
+<div class="clip cap" id="cap-s1c" data-start="64.248" data-duration="14.518" data-track-index="3"><span>DDPM 的一千步,EDM 的十八个西格玛,flow matching 的均匀 t。放到这根轴上看,它们只是同一根轴上,不同的刻度铺法。四只走速不同的钟,指着同一个太阳。</span></div>
+<div class="clip cap" id="cap-s1d" data-start="79.116" data-duration="19.126" data-track-index="3"><span>这根轴有直接的物理含义。标准差为西格玛的噪声,恰好抹掉尺寸小于西格玛的结构。看这条曲线,噪声每扫过一个结构尺度,就掉一个台阶。高噪声段决定构图,中段决定身份,低噪声段决定纹理。</span></div>
+<div class="clip cap" id="cap-s1e" data-start="98.592" data-duration="18.91" data-track-index="3"><span>把数据整体放大一倍,整条曲线向右平移。这就是高分辨率训练必须平移调度的全部原因。SD3 的 shift,Wan 2.2 按噪声段分家的双专家,都是在这根轴上花钱。没有神秘,只有量纲。</span></div>
+<div class="clip cap" id="cap-s2a" data-start="119.352" data-duration="22.174" data-track-index="3"><span>现在说网络到底学什么。给定带噪状态,存在一个客观的、与模型无关的量,x零的条件期望。看到这团噪声,干净数据的最优猜测。整个领域可以浓缩成一句话。训练,是在逼近这个条件期望。采样,是在反复咨询它。</span></div>
+<div class="clip cap" id="cap-s2b" data-start="141.876" data-duration="16.39" data-track-index="3"><span>论文里的 epsilon、v、u、score,全是这个期望的线性改写。同一支箭头,五件衣服。知道其中任何一个,另外四个当场换算出来。这是恒等式,不是近似。</span></div>
+<div class="clip cap" id="cap-s2c" data-start="158.616" data-duration="16.126" data-track-index="3"><span>那为什么还要五种?因为网络的输出带误差,而换算是线性的,误差会被换算系数放大。看这条放大曲线。epsilon 预测在高噪声端,一份误差换算到 x零,要放大九十倍。</span></div>
+<div class="clip cap" id="cap-s2d" data-start="175.092" data-duration="19.678" data-track-index="3"><span>这不是理论洁癖。我们真的分别训练了三个方言网络。中段,它们学到的场几乎重合。但在纯噪声端,epsilon 网络的误差,是 flow matching 网络的七十一倍。formulation 之争的真身,是选择把误差预算,花在轴的哪一段。</span></div>
+<div class="clip cap" id="cap-s2e" data-start="195.12" data-duration="11.446" data-track-index="3"><span>v 预测,EDM 的 preconditioning,flow matching 的速度,全程有界。它们就是为此设计的。这就是现代模型的默认选择。</span></div>
+<div class="clip cap" id="cap-s3a" data-start="208.416" data-duration="18.766" data-track-index="3"><span>训练循环写全了只有六行。抽数据,抽噪声等级,抽噪声,调配,前向,回归目标。任何一家都是这六行。真正的分歧只有两处,往哪些噪声等级投预算,和给损失乘什么权重。</span></div>
+<div class="clip cap" id="cap-s3b" data-start="227.532" data-duration="21.334" data-track-index="3"><span>把三代配方画到同一根轴上。DDPM 均匀撒点得到的钟形,只是副产品。EDM 的 log normal,SD3 的 logit normal,都刻意把预算压在中段,正对决策带。两家独立收敛到同一个判断,把钱花在任务既不平凡、也不是不可能的地方。</span></div>
+<div class="clip cap" id="cap-s3c" data-start="249.216" data-duration="22.15" data-track-index="3"><span>损失曲线在这里没有脸面。看这个真实训练。总损失早早躺平。但按噪声等级分桶,高噪声桶天生大几个数量级,那是不可约的贝叶斯地板,不是没学好。真正整个训练期都在下降的,是中段桶。只盯总损失,等于蒙眼开车。</span></div>
+<div class="clip cap" id="cap-s3d" data-start="271.716" data-duration="17.398" data-track-index="3"><span>所以行家的仪表盘是,分桶损失,统一换算到 x零空间,外加定期真采样。还有一条战伤。评测出片永远用 E M A 权重。忘挂 E M A,是复现不出论文的头号冤案。</span></div>
+<div class="clip cap" id="cap-s4a" data-start="290.964" data-duration="13.87" data-track-index="3"><span>现在是全课的地基实验。一次完全没有神经网络的生成。如果扩散的全部机制,就是反复咨询条件期望,那把这个期望用闭式算出来,应该就能生成图像。</span></div>
+<div class="clip cap" id="cap-s4b" data-start="305.184" data-duration="15.67" data-track-index="3"><span>对有限训练集,它确实有精确解。按与带噪状态的贴合度,softmax 加权平均全部训练图。屏幕上正在发生的,就是用四百张真 MNIST 的闭式最优去噪器,在跑标准采样。</span></div>
+<div class="clip cap" id="cap-s4c" data-start="321.204" data-duration="19.366" data-track-index="3"><span>看这个结晶过程。高噪声时,猜测是全体训练图的平均,那团著名的幽灵。噪声降低,它开始在几个候选之间叠影。最后,锁死成一张清晰的数字。生成,就是这团均值,逐步锐化成样本的过程。</span></div>
+<div class="clip cap" id="cap-s4d" data-start="340.92" data-duration="12.886" data-track-index="3"><span>但是,跑完对质。每张生成图,找最近的训练图,几乎逐像素重合。完美的目标函数,加完美的优化,等于完美的复读机。</span></div>
+<div class="clip cap" id="cap-s4e" data-start="354.156" data-duration="18.55" data-track-index="3"><span>这就是本课最深的一句话。目标函数把最优解,钉在复读训练集上。你买单的一切创造力,来自网络学不会这张查表。泛化,是归纳偏置对目标函数的背叛。这也是数据去重如此重要的原因。</span></div>
+<div class="clip cap" id="cap-s5a" data-start="374.556" data-duration="20.182" data-track-index="3"><span>训练完,手里只有一个场。生成,就是从纯噪声出发,沿着场往回积分一条常微分方程。所有采样器只有三个旋钮。在轴上落哪些步点,每步用几次前向估计斜率,以及走的时候,要不要重新掺一点噪声。</span></div>
+<div class="clip cap" id="cap-s5b" data-start="395.088" data-duration="23.686" data-track-index="3"><span>DDPM 的 ancestral sampling 不是另一种算法,它是 eta 等于一的 DDIM。而 DDIM 是确定性极限,也是同一条 O D E 的 exponential integrator。看这个实验,同一批种子,DDIM 和 flow matching 的 Euler 各走各的,端点距离随步数,按一比 N 消失。同一条曲线,两种记法。</span></div>
+<div class="clip cap" id="cap-s5c" data-start="419.124" data-duration="22.726" data-track-index="3"><span>步数买的是积分精度,不是质量上限。曲线在十几步处有个膝盖,之后每翻倍,只买回一点点。而随机性是另一笔预算。模型完美时,它不改变终点分布,我们实测过。模型不完美时,教科书说它能纠错,但这依赖误差结构,不是普适定律。</span></div>
+<div class="clip cap" id="cap-s5d" data-start="442.2" data-duration="14.038" data-track-index="3"><span>记住三条。少步必然确定性。高噪声段的伤,后面还有救。最后几步的伤,无药可医。所以生产系统把末端伺候得最精细。</span></div>
+<div class="clip cap" id="cap-s6a" data-start="458.088" data-duration="15.766" data-track-index="3"><span>classifier free guidance,文生图产品里那根服从度滑杆的本体。训练时随机丢弃条件,一张网同时会算有条件和无条件两个预测。推理时,沿两者之差的方向,外推 w 倍。</span></div>
+<div class="clip cap" id="cap-s6b" data-start="474.204" data-duration="17.686" data-track-index="3"><span>它为什么必须存在?因为真实网络的条件支路永远欠表达。文本信号在几十层里被稀释,w 等于一时不够听话。w 是在补一个训练缺陷。这就是为什么,不同模型的最佳 w,不能互相搬运。</span></div>
+<div class="clip cap" id="cap-s6c" data-start="492.24" data-duration="23.302" data-track-index="3"><span>但 w 大于一,采的是一个不存在的分布。教科书说,锐化,收缩。我们用零误差的解析模型实测,类内离散度不缩反涨,涨到百分之一百二十七。样本质心被推过数据,向更像这个条件的方向外冲。图像世界里,这就是过饱和、塑料感的第一性来源。</span></div>
+<div class="clip cap" id="cap-s6d" data-start="515.892" data-duration="16.654" data-track-index="3"><span>修法工具箱,按机制对症。只在决策带开引导的 interval CFG。把统计量拉回来的 rescale。用更差的自己当无条件支路的 autoguidance。以及,把 w 蒸进权重。</span></div>
+<div class="clip cap" id="cap-s7a" data-start="534.396" data-duration="16.75" data-track-index="3"><span>多步学的是局部方向。一步需要的,是整条轨迹的终点映射。这是另一个函数。所以蒸馏不是加速技巧,是换学习对象。四条路线,是给这个映射列方程的四种方式。</span></div>
+<div class="clip cap" id="cap-s7b" data-start="551.496" data-duration="12.478" data-track-index="3"><span>第一个障碍看这里。直接把步数设成一,输出是全体候选的平均。因为网络学的是均值,不是样本。天真的一步,必然糊。</span></div>
+<div class="clip cap" id="cap-s7c" data-start="564.324" data-duration="30.67" data-track-index="3"><span>换对象之后呢。回归教师端点的学生,永不丢模式,但把误差摊成糊。分布匹配的学生,每个点都锐利,代价是整簇整簇地弃守。mean seeking 和 mode seeking,不是黑话,是两种破产方式。我们还实测了轨迹直化。reflow 之后,两步的端点漂移,改善一百三十二倍。因为配对把条件不确定性挤掉了,而曲率的来源,正是它。</span></div>
+<div class="clip cap" id="cap-s7d" data-start="595.344" data-duration="18.382" data-track-index="3"><span>所有少步模型,共同签三笔账。CFG 已蒸进权重,没有事后调 w 的自由。依赖往返轨迹的编辑失灵。以及,多样性地板。验收少步模型,fidelity 和 coverage,两族指标都要看。</span></div>
+<div class="clip cap" id="cap-s8a" data-start="615.576" data-duration="19.006" data-track-index="3"><span>最后一站,把时间接上。Sora 形状的模型,把整段视频一锅炖。质量最好,但定长,高延迟,不可交互。把它变成实时世界,是三步手术。架构因果化,训练自回归化,时间轴蒸馏。</span></div>
+<div class="clip cap" id="cap-s8b" data-start="634.932" data-duration="20.71" data-track-index="3"><span>关键一步叫 Diffusion Forcing。训练时,给每一帧独立的噪声等级。过去干净,未来浑浊。一个改动买到三件事。学会以历史为条件生成。学会容忍历史里的瑕疵。推理时,可以滑动窗口,无限续写。</span></div>
+<div class="clip cap" id="cap-s8c" data-start="655.992" data-duration="22.15" data-track-index="3"><span>为什么容忍瑕疵这么要紧?自回归的原罪,叫 exposure bias。训练看真历史,部署看自己的输出。看这个实验。干净上下文训练的模型,每步一点小偏差,复利成灾。加噪上下文训练的模型,把每步的伤当场吸收,误差不获准过夜。</span></div>
+<div class="clip cap" id="cap-s8d" data-start="678.492" data-duration="18.382" data-track-index="3"><span>机制一句话。前者学到的映射,对误差是中性的。后者,是收缩的。Diffusion Forcing,Self Forcing,直到老 NLP 的 scheduled sampling,买的都是同一件商品。让模型,成为自己误差的去噪器。</span></div>
+<div class="clip cap" id="cap-s8e" data-start="697.224" data-duration="19.27" data-track-index="3"><span>这条线的现状。Genie 3 已经公测,可走动的分钟级世界。瓶颈三件套,长程记忆,误差漂移,每帧算力。视频模型和世界模型,正在合流成一个物种。视频先验,加因果接口,加记忆。</span></div>
+<div class="clip cap" id="cap-s9a" data-start="718.344" data-duration="28.054" data-track-index="3"><span>收束成五个心智模型。一,一族分布,多套坐标,formulation 之争是坐标之争。二,log S N R 轴是唯一的横轴,一切预算都花在它上面。三,网络输出是均值,不是样本。四,采样是数值积分,随机性是另开的预算。五,训练的最优解是复读机,创造力,住在网络对它的背叛里。</span></div>
+<div class="clip cap" id="cap-s9b" data-start="746.748" data-duration="14.038" data-track-index="3"><span>外加一条工程界的备忘。产品名,不等于技术路线名。Sora 2 已经停服,但它定义的词汇,活在每一家的架构里。押注要押在轴上,不是名字上。</span></div>
+<div class="clip cap" id="cap-s9c" data-start="761.136" data-duration="13.174" data-track-index="3"><span>接下来,去实验室亲手拨。两份交互网页,今天看到的所有曲线,都能重跑,改参数,被打脸。真正的懂,从预测错误开始。</span></div>
+<audio id="vo-s0a" src="assets/vo/s0a.mp3" data-start="0.5" data-duration="12.864" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s0b" src="assets/vo/s0b.mp3" data-start="14.264" data-duration="13.08" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s1a" src="assets/vo/s1a.mp3" data-start="29.544" data-duration="17.664" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s1b" src="assets/vo/s1b.mp3" data-start="48.108" data-duration="15.24" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s1c" src="assets/vo/s1c.mp3" data-start="64.248" data-duration="13.968" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s1d" src="assets/vo/s1d.mp3" data-start="79.116" data-duration="18.576" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s1e" src="assets/vo/s1e.mp3" data-start="98.592" data-duration="18.36" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s2a" src="assets/vo/s2a.mp3" data-start="119.352" data-duration="21.624" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s2b" src="assets/vo/s2b.mp3" data-start="141.876" data-duration="15.84" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s2c" src="assets/vo/s2c.mp3" data-start="158.616" data-duration="15.576" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s2d" src="assets/vo/s2d.mp3" data-start="175.092" data-duration="19.128" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s2e" src="assets/vo/s2e.mp3" data-start="195.12" data-duration="10.896" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s3a" src="assets/vo/s3a.mp3" data-start="208.416" data-duration="18.216" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s3b" src="assets/vo/s3b.mp3" data-start="227.532" data-duration="20.784" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s3c" src="assets/vo/s3c.mp3" data-start="249.216" data-duration="21.6" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s3d" src="assets/vo/s3d.mp3" data-start="271.716" data-duration="16.848" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s4a" src="assets/vo/s4a.mp3" data-start="290.964" data-duration="13.32" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s4b" src="assets/vo/s4b.mp3" data-start="305.184" data-duration="15.12" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s4c" src="assets/vo/s4c.mp3" data-start="321.204" data-duration="18.816" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s4d" src="assets/vo/s4d.mp3" data-start="340.92" data-duration="12.336" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s4e" src="assets/vo/s4e.mp3" data-start="354.156" data-duration="18.0" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s5a" src="assets/vo/s5a.mp3" data-start="374.556" data-duration="19.632" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s5b" src="assets/vo/s5b.mp3" data-start="395.088" data-duration="23.136" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s5c" src="assets/vo/s5c.mp3" data-start="419.124" data-duration="22.176" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s5d" src="assets/vo/s5d.mp3" data-start="442.2" data-duration="13.488" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s6a" src="assets/vo/s6a.mp3" data-start="458.088" data-duration="15.216" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s6b" src="assets/vo/s6b.mp3" data-start="474.204" data-duration="17.136" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s6c" src="assets/vo/s6c.mp3" data-start="492.24" data-duration="22.752" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s6d" src="assets/vo/s6d.mp3" data-start="515.892" data-duration="16.104" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s7a" src="assets/vo/s7a.mp3" data-start="534.396" data-duration="16.2" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s7b" src="assets/vo/s7b.mp3" data-start="551.496" data-duration="11.928" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s7c" src="assets/vo/s7c.mp3" data-start="564.324" data-duration="30.12" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s7d" src="assets/vo/s7d.mp3" data-start="595.344" data-duration="17.832" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s8a" src="assets/vo/s8a.mp3" data-start="615.576" data-duration="18.456" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s8b" src="assets/vo/s8b.mp3" data-start="634.932" data-duration="20.16" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s8c" src="assets/vo/s8c.mp3" data-start="655.992" data-duration="21.6" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s8d" src="assets/vo/s8d.mp3" data-start="678.492" data-duration="17.832" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s8e" src="assets/vo/s8e.mp3" data-start="697.224" data-duration="18.72" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s9a" src="assets/vo/s9a.mp3" data-start="718.344" data-duration="27.504" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s9b" src="assets/vo/s9b.mp3" data-start="746.748" data-duration="13.488" data-track-index="10" data-volume="1"></audio>
+<audio id="vo-s9c" src="assets/vo/s9c.mp3" data-start="761.136" data-duration="12.624" data-track-index="10" data-volume="1"></audio>
+</div>
+<script>
+(function () {
+  var T = window.HF_TIMING, KC = window.HF_SCENES_CORE, KL = window.HF_SCENES_LATE;
+  var cv = document.getElementById('maincv');
+  var ctx = cv.getContext('2d');
+  var order = ['s0','s1','s2','s3','s4','s5','s6','s7','s8','s9'];
+  var draws = { s0: KC.drawS0, s1: KC.drawS1, s2: KC.drawS2, s3: KC.drawS3, s4: KC.drawS4,
+                s5: KL.drawS5, s6: KL.drawS6, s7: KL.drawS7, s8: KL.drawS8, s9: KL.drawS9 };
+  function drawAll(t) {
+    ctx.clearRect(0, 0, 1920, 1080);
+    for (var i = 0; i < order.length; i++) {
+      var sid = order[i], S = T[sid];
+      if (t >= S.start - 0.05 && t < S.start + S.dur) { draws[sid](ctx, t, T); break; }
+    }
+  }
+  window.__timelines = window.__timelines || {};
+  var tl = gsap.timeline({ paused: true });
+  var proxy = { t: 0 };
+  tl.to(proxy, { t: T.TOTAL, duration: T.TOTAL, ease: 'none',
+    onUpdate: function () { drawAll(proxy.t); } }, 0);
+  // scene chrome tweens (absolute times; never touch .clip elements themselves)
+  order.forEach(function (sid) {
+    var S = T[sid];
+    var eb = document.getElementById(sid + '-eyebrow');
+    if (eb) {
+      tl.fromTo('#' + sid + '-eyebrow', { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.7, ease: 'power2.out' }, S.start + 0.15);
+      tl.fromTo('#' + sid + '-title', { autoAlpha: 0, y: 22 }, { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power2.out' }, S.start + 0.3);
+    }
+  });
+  // S0 big line at s0b
+  tl.fromTo('#s0-line1', { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: 0.9, ease: 'power2.out' }, T.s0.segs[1].start + 0.2);
+  tl.fromTo('#s0-line2', { autoAlpha: 0, scale: 0.92 }, { autoAlpha: 1, scale: 1, duration: 0.9, ease: 'power2.out' }, T.s0.segs[1].start + 1.0);
+  // S3 code lines staggered during s3a
+  for (var i = 0; i < 6; i++) {
+    tl.fromTo('#s3-code-' + i, { autoAlpha: 0, x: -18 }, { autoAlpha: 1, x: 0, duration: 0.5, ease: 'power2.out' }, T.s3.segs[0].start + 0.6 + i * 1.1);
+  }
+  // hide the code block once density chart phase begins
+  tl.to('#s3-code', { autoAlpha: 0, duration: 0.6 }, T.s3.segs[1].start + 0.2);
+  window.__timelines['dlab'] = tl;
+})();
+</script>
+</body>
+</html>

@@ -8,3 +8,16 @@ __pycache__/
 
 # third-party QA script copied from the dataviz skill (not part of the app)
 app/js/validate_palette.js
+
+# video pipeline: local toolchain & heavy/regenerable artifacts
+tools/
+video/node_modules/
+video/snapshots/
+video/assets/fonts/
+video/assets/vo/*.mp3
+video/*.mp4
+video/render.log
+video/err.log
+video/snaptimes.txt
+video/patch1.py
+video/.hyperframes/

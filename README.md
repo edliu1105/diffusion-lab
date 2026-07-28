@@ -46,6 +46,19 @@ python exp/cifar.py           # (bonus)CIFAR-10 彩色条件 FM
 统一数学核心在 `exp/common.py`(带 fp64 自检),浏览器运行时在 `app/js/{nn,gmm,diff}.js`,
 两边用 `app/data/fixtures.json` 逐位对拍(§11.3 一键运行)。
 
+## 教学视频(video/)
+
+约 13 分钟、1080p、中文旁白的浓缩课程,十幕动画全部为真实计算(实时运行仓库里训练的模型、
+经验贝叶斯 MNIST 闭式生成、真训练的 exposure-bias 漂移实验)。用 [HyperFrames](https://github.com/heygen-com/hyperframes) 渲染:
+
+```bash
+cd video
+python gen_audio.py           # edge-tts 旁白(41 段)→ assets/vo/
+python export_video_data.py   # 权重/MNIST/漂移数据 → assets/js/
+python build_composition.py   # 旁白时长驱动的 index.html
+npx hyperframes check && npx hyperframes render --quality high --output diffusion-course.mp4
+```
+
 ## 设计原则
 
 - 一切核心断言可亲手验证(LIVE 实验或一键证明),没有示意动画;
