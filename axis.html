@@ -12,9 +12,11 @@
 <header id="ax-head">
   <div class="eyebrow">DIFFUSION BENCH · 所有曲线实时计算 · 2D 场与轨迹来自本机训练的真实网络 · 28×28 张量来自真实 UNet 输出</div>
   <h1>统一 λ 轴实验台</h1>
-  <p class="lede">所有 diffusion / flow 算法共享一次线性混合 <code>x_t = α·x₀ + σ·ε</code>,唯一的自然坐标是
-  <b>λ = logSNR = 2·log(α/σ)</b>。调度是这根轴上的刻度,预测目标是它上面的坐标选择,训练在它上面分配样本,
-  采样沿它数值积分,蒸馏把它的区间压成一跳。<span class="refwrap" id="hd-ref"></span></p>
+  <p class="lede">所有 diffusion / flow 算法共享一次线性混合 <code>x_t = α·x₀ + σ·ε</code>:信号缩到 α 倍,掺入强度 σ 的噪声。
+  把 x_t 整体乘一个常数不增减任何信息,所以 (α, σ) 里真正有意义的只有<b>比值</b>——信噪比 SNR = α²/σ²。
+  <b>λ = logSNR = 2·log(α/σ)</b> 就是它的对数刻度(扩散世界的"分贝"):λ=0 信噪各半,每 +1 信噪比 ×e,+9 近乎干净,−9 近乎纯噪。
+  各家论文的 t / σ / φ 都只是 λ 的换算标签(卡①);训练在这根轴上分配样本(卡②),预测目标是它上面的坐标选择(卡③),
+  采样沿它数值积分(卡④),蒸馏把它的区间压成一跳(卡⑤)。<span class="refwrap" id="hd-ref"></span></p>
   <p class="hint">拖动下方任意图中的<b>白色游标</b>(或按 ← →,Shift 加速)——本页所有图与两个探头同步。</p>
 </header>
 
