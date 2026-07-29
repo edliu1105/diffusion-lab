@@ -83,7 +83,7 @@ export function drawMnist() {
   pairDiv.style.display = distill ? '' : 'none';
   traceDiv.style.display = (!distill && S.walkK > 0 && traceImg && traceImg.width) ? '' : 'none';
   if (distill) {
-    footEl.innerHTML = `与探头 A 同一件事的图像版:教师沿轴走 32 步;一步学生(Geng et al. 2025 意义下的平均速度)把整根轴压成 1 次前向。同种子逐列对比:结构一致,损失的是笔画锐度(高频能量 88%)。`;
+    footEl.innerHTML = `与探头 A 同一件事的图像版:教师沿轴走 32 步;一步学生(MeanFlow 意义下的平均速度)把整根轴压成 1 次前向。同种子逐列对比:结构一致,损失的是笔画锐度(高频能量 88%)。`;
     return;
   }
 

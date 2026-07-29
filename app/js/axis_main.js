@@ -57,18 +57,24 @@ function invMono(lamOf, target) {
   return (lo + hi) / 2;
 }
 export const TIMEROWS = [
-  { name: 'VP linear-β 的 t', cite: 'Ho et al. 2020', desc: '离散 1000 步,β 线性',
+  { name: 'VP linear-β 的 t', cite: 'DDPM', desc: '离散 1000 步,β 线性',
+    formula: 'λ = logit(ᾱ(t)),ᾱ(t) = e<sup>−0.1t−9.95t²</sup>;反向数值解',
     ticks: () => uniformTicks(lamOfT_vplin, 0.02, 0.999), fmt: l => 't = ' + invMono(lamOfT_vplin, l).toFixed(3) },
-  { name: 'VP cosine 的 t', cite: 'Nichol & Dhariwal 2021', desc: 'ᾱ 余弦形',
+  { name: 'VP cosine 的 t', cite: 'iDDPM', desc: 'ᾱ 余弦形',
+    formula: 'λ ≈ 2·ln cot(πt/2)  ⇔  t ≈ (2/π)·arctan e<sup>−λ/2</sup>(s=0.008 修正略)',
     ticks: () => uniformTicks(lamOfT_cos, 0.001, 0.999), fmt: l => 't = ' + invMono(lamOfT_cos, l).toFixed(3) },
-  { name: 'EDM 的 σ', cite: 'Karras et al. 2022', desc: 'σ = e^{−λ/2},ρ=7 网格两端加密',
+  { name: 'EDM 的 σ', cite: 'EDM', desc: 'ρ=7 网格两端加密',
+    formula: 'λ = −2·ln σ  ⇔  σ = e<sup>−λ/2</sup>',
     ticks: () => [80, 40, 20, 10, 5, 2, 1, .5, .2, .1, .05, .02, .01, .005, .002].map(lamOfSig),
     fmt: l => 'σ = ' + Math.exp(-l / 2).toPrecision(3) },
-  { name: 'Rectified Flow 的 t', cite: 'Liu et al. 2022 / Lipman et al. 2022', desc: 'x=(1−t)x₀+t·ε',
+  { name: 'Rectified Flow 的 t', cite: 'RF / Flow Matching', desc: 'x=(1−t)x₀+t·ε',
+    formula: 'λ = 2·ln((1−t)/t)  ⇔  t = 1/(1+e<sup>λ/2</sup>)',
     ticks: () => uniformTicks(lamOfT_rf, 0.002, 0.998), fmt: l => 't = ' + tOfLam_rf(l).toFixed(3) },
-  { name: `RF + SD3 shift(s=${SHIFT_S})`, cite: 'Esser et al. 2024', desc: `λ 轴上整体平移 −2ln s = ${shiftLam.toFixed(2)}`,
+  { name: `RF + SD3 shift(s=${SHIFT_S})`, cite: 'SD3', desc: '分辨率越高 s 越大',
+    formula: `t′ = s·t/(1+(s−1)t)  ⇔  λ′ = λ − 2·ln s = λ ${shiftLam.toFixed(2)}`,
     ticks: () => uniformTicks(t => lamOfT_rf(t) + shiftLam, 0.002, 0.998), fmt: l => "t′ = " + tOfLam_rf(l - shiftLam).toFixed(3) },
-  { name: 'TrigFlow 的 φ', cite: 'Lu & Song 2024(sCM)', desc: 'x = cosφ·x₀ + sinφ·ε,φ = arctan e^{−λ/2}',
+  { name: 'TrigFlow 的 φ', cite: 'sCM', desc: 'x = cosφ·x₀ + sinφ·ε',
+    formula: 'λ = −2·ln tan φ  ⇔  φ = arctan e<sup>−λ/2</sup>(= x_t 在基底平面的极角,卡③)',
     ticks: () => { const a = []; for (let i = 1; i < 16; i++) a.push(-2 * Math.log(Math.tan(i / 16 * Math.PI / 2))); return a; },
     fmt: l => 'φ = ' + Math.atan(Math.exp(-l / 2)).toFixed(3) },
 ];
@@ -97,18 +103,18 @@ export function gridLams(sched, N) {
 // ---------- training densities & unified loss weights (analytic, canonical params) ----------
 const nrm = (x, m, sd) => Math.exp(-0.5 * ((x - m) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI));
 export const DENS = [
-  { key: 'cos', label: '均匀 t · cosine(Nichol 2021)', color: '#5083DC',
+  { key: 'cos', label: '均匀 t · cosine(iDDPM)', color: '#5083DC',
     f: l => { const d = 0.01, tOf = L => { const a2 = 1 / (1 + Math.exp(-L)); const s = 0.008, f0 = Math.cos(s / (1 + s) * Math.PI / 2); return Math.max(0, Math.min(1, (2 / Math.PI) * Math.acos(Math.min(1, Math.sqrt(a2) * f0)) * (1 + s) - s)); }; return Math.abs((tOf(l + d) - tOf(l - d)) / (2 * d)); } },
-  { key: 'edm', label: 'lognormal σ(Karras 2022)→ λ~N(2.4, 2.4²)', color: '#C28324', f: l => nrm(l, 2.4, 2.4) },
-  { key: 'sd3', label: 'logit-normal t(Esser 2024)→ λ~N(0, 2²)', color: '#D65077', f: l => nrm(l, 0, 2) },
-  { key: 'sd3s', label: `+ shift s=${SHIFT_S}(同文)→ 平移 ${shiftLam.toFixed(2)}`, color: '#1FA9A3', f: l => nrm(l, shiftLam, 2) },
+  { key: 'edm', label: 'lognormal σ(EDM)→ λ~N(2.4, 2.4²)', color: '#C28324', f: l => nrm(l, 2.4, 2.4) },
+  { key: 'sd3', label: 'logit-normal t(SD3)→ λ~N(0, 2²)', color: '#D65077', f: l => nrm(l, 0, 2) },
+  { key: 'sd3s', label: `+ shift s=${SHIFT_S}(SD3)→ 平移 ${shiftLam.toFixed(2)}`, color: '#1FA9A3', f: l => nrm(l, shiftLam, 2) },
 ];
 const SD_DATA = 1.083;
 export const WTS = [
-  { key: 'eps', label: 'ε 损失 ⇒ w=e^λ(Ho 2020)', color: '#5083DC', f: l => Math.exp(l) },
-  { key: 'v', label: 'v 损失 ⇒ w=1+e^λ(Salimans & Ho 2022)', color: '#B08FEA', f: l => 1 + Math.exp(l) },
-  { key: 'u', label: 'u 损失 ⇒ w=(1+e^{λ/2})²(Lipman 2022)', color: '#D65077', f: l => (1 + Math.exp(l / 2)) ** 2 },
-  { key: 'D', label: 'EDM λ(σ) 权重(Karras 2022)', color: '#C28324', f: l => (Math.exp(-l) + SD_DATA ** 2) / (Math.exp(-l) * SD_DATA ** 2) },
+  { key: 'eps', label: 'ε 损失 ⇒ w=e^λ(DDPM)', color: '#5083DC', f: l => Math.exp(l) },
+  { key: 'v', label: 'v 损失 ⇒ w=1+e^λ(v-prediction)', color: '#B08FEA', f: l => 1 + Math.exp(l) },
+  { key: 'u', label: 'u 损失 ⇒ w=(1+e^{λ/2})²(Flow Matching)', color: '#D65077', f: l => (1 + Math.exp(l / 2)) ** 2 },
+  { key: 'D', label: 'λ(σ) 权重(EDM)', color: '#C28324', f: l => (Math.exp(-l) + SD_DATA ** 2) / (Math.exp(-l) * SD_DATA ** 2) },
 ];
 // error amplification: one unit of target error -> x0_hat error (VP frame)
 export const AMP = [

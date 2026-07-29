@@ -69,7 +69,8 @@ export function initCards() {
   const rows = document.getElementById('time-rows');
   TIMEROWS.forEach((t, i) => {
     const div = document.createElement('div'); div.className = 'trow';
-    div.innerHTML = `<div class="tname">${t.name}<span class="tsub">${t.cite} · ${t.desc}</span></div>
+    div.innerHTML = `<div class="tname">${t.name} <span class="talg">${t.cite}</span>
+        <span class="tform">${t.formula}</span><span class="tsub">${t.desc}</span></div>
       <canvas id="trow-${i}"></canvas><div class="tread" id="tread-${i}"></div>`;
     rows.append(div);
   });

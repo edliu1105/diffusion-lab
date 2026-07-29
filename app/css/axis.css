@@ -38,10 +38,13 @@ a.ref {
 a.ref:hover { background: rgba(120, 168, 255, 0.12); text-decoration: none; }
 
 .rowlist { display: flex; flex-direction: column; }
-.trow { display: grid; grid-template-columns: 240px 1fr 130px; align-items: center; gap: 14px; padding: 3px 0; }
+.trow { display: grid; grid-template-columns: 385px 1fr 120px; align-items: center; gap: 14px; padding: 6px 0; }
 .trow + .trow { border-top: 1px solid rgba(154, 163, 178, 0.07); }
-.trow .tname { font-size: 13px; color: var(--ink); }
-.trow .tname .tsub { display: block; font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+.trow .tname { font-size: 13px; color: var(--ink); line-height: 1.5; }
+.trow .tname .talg { font-family: var(--mono); font-size: 10px; color: #78A8FF; border: 1px solid rgba(120,168,255,0.3); border-radius: 10px; padding: 0 7px; margin-left: 4px; vertical-align: 1px; }
+.trow .tname .tform { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--ink2); margin-top: 2px; }
+.trow .tname .tform sup { font-size: 9px; }
+.trow .tname .tsub { display: block; font-family: var(--mono); font-size: 9.5px; color: var(--ink3); margin-top: 1px; }
 .trow canvas { display: block; width: 100% !important; max-width: 100%; }
 .trow .tread { font-family: var(--mono); font-size: 12.5px; color: var(--ink); text-align: right; }
 
