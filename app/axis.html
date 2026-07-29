@@ -41,7 +41,7 @@
     <div class="cardhead">
       <h2>② 训练:在 λ 上抽样本 × 给损失定权重</h2>
       <p class="how">上图:训练时噪声等级的采样密度 p(λ)——各家把梯度花在哪一段。下图:把各家原生损失统一换算成 ‖x̂₀−x₀‖² 后的等效权重 w(λ)(log 刻度,只看形状)。两者相乘才是真实的训练侧重。
-      2026 的新自由度是<b>λ 的分配粒度</b>:Self-Flow(FLUX 团队,ICML'26)不再整图共用一个 λ,而是给<b>每个 token 独立抽 λ</b>(双时间调度)——干净 token 成为带噪 token 的上下文,信息不对称逼着网络在纯 FM 目标内长出语义表征,取代 REPA 类外部对齐(自报收敛快 ~2.8×)。</p>
+      2026 的新自由度是<b>λ 的分配粒度</b>:Self-Flow(FLUX 团队,ICML'26)不再整图共用一个 λ,而是给<b>每个 token 独立抽 λ</b>(双时间调度)——干净 token 成为带噪 token 的上下文,信息不对称逼着网络在纯 FM 目标内长出语义表征,取代 REPA 类外部对齐(自报收敛快 ~2.8×)。<b>它的输入构造在探头 B 底部实时演示</b>——拖主游标看噪声 token 变化。</p>
       <div class="refwrap" id="train-refs"></div>
     </div>
     <div class="plotwrap"><div class="plotlabel">采样密度 p(λ)</div><canvas id="cv-dens"></canvas><div class="leg" id="leg-dens"></div></div>
