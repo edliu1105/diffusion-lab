@@ -20,6 +20,7 @@ export const REFS = {
   meanflow: { label: 'MeanFlow · 平均速度', url: 'https://arxiv.org/abs/2505.13447' },
   shortcut: { label: 'Shortcut Models', url: 'https://arxiv.org/abs/2410.12557' },
   dmd:      { label: 'DMD / DMD2', url: 'https://arxiv.org/abs/2405.14867' },
+  selfflow: { label: 'Self-Flow · token 级双 λ 调度', url: 'https://arxiv.org/abs/2603.06507' },
   df:       { label: 'Diffusion Forcing', url: 'https://arxiv.org/abs/2407.01392' },
   causvid:  { label: 'CausVid', url: 'https://arxiv.org/abs/2412.07772' },
   selfforce:{ label: 'Self-Forcing', url: 'https://arxiv.org/abs/2506.08009' },

@@ -40,7 +40,8 @@
   <section class="card" id="card-train">
     <div class="cardhead">
       <h2>② 训练:在 λ 上抽样本 × 给损失定权重</h2>
-      <p class="how">上图:训练时噪声等级的采样密度 p(λ)——各家把梯度花在哪一段。下图:把各家原生损失统一换算成 ‖x̂₀−x₀‖² 后的等效权重 w(λ)(log 刻度,只看形状)。两者相乘才是真实的训练侧重。</p>
+      <p class="how">上图:训练时噪声等级的采样密度 p(λ)——各家把梯度花在哪一段。下图:把各家原生损失统一换算成 ‖x̂₀−x₀‖² 后的等效权重 w(λ)(log 刻度,只看形状)。两者相乘才是真实的训练侧重。
+      2026 的新自由度是<b>λ 的分配粒度</b>:Self-Flow(FLUX 团队,ICML'26)不再整图共用一个 λ,而是给<b>每个 token 独立抽 λ</b>(双时间调度)——干净 token 成为带噪 token 的上下文,信息不对称逼着网络在纯 FM 目标内长出语义表征,取代 REPA 类外部对齐(自报收敛快 ~2.8×)。</p>
       <div class="refwrap" id="train-refs"></div>
     </div>
     <div class="plotwrap"><div class="plotlabel">采样密度 p(λ)</div><canvas id="cv-dens"></canvas><div class="leg" id="leg-dens"></div></div>
@@ -143,7 +144,8 @@
   <section class="card" id="card-video">
     <div class="cardhead">
       <h2>⑥ 延伸:视频 / 自回归 / 世界模型 —— 多个游标,同一根轴</h2>
-      <p class="how">视频模型的差异可以读成"每一帧此刻站在 λ 轴哪里":整段扩散 = 全部帧绑成一叠齐降;Diffusion Forcing = 每帧独立噪声等级,过去干净、未来更噪;流式因果生成 = 历史帧停在数据端(进 KV cache),当前帧用 1–4 步俯冲。记忆、动作、世界状态不在这根轴上,不在本页范围。</p>
+      <p class="how">视频模型的差异可以读成"每一帧此刻站在 λ 轴哪里":整段扩散 = 全部帧绑成一叠齐降;Diffusion Forcing = 每帧独立噪声等级,过去干净、未来更噪;流式因果生成 = 历史帧停在数据端(进 KV cache),当前帧用 1–4 步俯冲。
+      "逐单元独立 λ"正在成为一根通用设计轴:帧级(Diffusion Forcing,为流式)→ token 级(Self-Flow,为表征,见卡②)。记忆、动作、世界状态不在这根轴上,不在本页范围。</p>
       <div class="refwrap" id="video-refs"></div>
       <div class="seg" id="ax-vpreset">
         <button data-v="offline" class="on">整段扩散</button><button data-v="df">Diffusion Forcing</button><button data-v="stream">流式因果</button>

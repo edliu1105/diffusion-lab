@@ -56,7 +56,7 @@ function curve(id, f, { color, width = 1.6, dash = [], yMap }) {
 export function initCards() {
   document.getElementById('hd-ref').innerHTML = refChip('vdm', 'tweedie');
   document.getElementById('time-refs').innerHTML = refChip('ddpm', 'iddpm', 'edm', 'rf', 'fm', 'sd3', 'scm');
-  document.getElementById('train-refs').innerHTML = refChip('ddpm', 'edm', 'sd3', 'kingma23');
+  document.getElementById('train-refs').innerHTML = refChip('ddpm', 'edm', 'sd3', 'kingma23', 'selfflow');
   document.getElementById('target-refs').innerHTML = refChip('tweedie', 'ddpm', 'vpred', 'fm', 'sde', 'edm');
   document.getElementById('sample-refs').innerHTML = refChip('ddim', 'ddpm', 'edm', 'sd3');
   document.getElementById('distill-refs').innerHTML = refChip('vpred', 'cm', 'ctm', 'scm', 'meanflow', 'shortcut', 'dmd', 'rf');
