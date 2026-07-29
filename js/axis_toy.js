@@ -8,7 +8,7 @@ import { mulberry32, gauss } from './gmm.js';
 import { S } from './axis_main.js';
 import { vpFromLam, fmTFromLam } from './nn.js';
 
-let plane, foot, note;
+let plane, foot;
 let NP = 620;
 let x0s, epss;                 // frozen pairs
 let xsWalk = null;             // sampler state (VP frame)
@@ -21,9 +21,17 @@ const TRACK = 34;
 
 export function initToy(canvas) {
   foot = document.getElementById('toy-foot');
-  note = document.getElementById('toy-note');
-  const size = Math.min(560, canvas.parentElement.clientWidth - 30);
-  plane = new Plane(canvas, { w: size, h: size, range: 2.6 });
+  const sizeOf = () => {
+    const pw = canvas.parentElement.clientWidth;
+    return pw >= 360 ? Math.min(480, pw - 52) : 440;   // hidden-pane fallback
+  };
+  plane = new Plane(canvas, { w: sizeOf(), h: sizeOf(), range: 2.6 });
+  new ResizeObserver(() => {
+    const s = sizeOf();
+    if (Math.abs(plane.w - s) < 6) return;
+    plane = new Plane(canvas, { w: s, h: s, range: 2.6 });
+    import('./axis_main.js').then(m => m.setS({}));
+  }).observe(canvas.parentElement);
   const rng = mulberry32(20260728);
   x0s = new Float32Array(NP * 2); epss = new Float32Array(NP * 2);
   const { x } = R.gmm.sample(NP, rng);
@@ -91,35 +99,31 @@ export function drawToy() {
   // data anchors
   for (let m = 0; m < R.gmm.K; m++) plane.cross(R.gmm.mu[m][0], R.gmm.mu[m][1], { color: MODE_COLORS[m], size: 5 });
 
-  if (S.mode === 'distill') { drawDistill(); return; }
+  if (S.toyView === 'distill') { drawDistill(); return; }
 
   // bridge cloud (frozen pairs at current lambda), FM coords
-  const ghost = S.mode === 'infer' && xsWalk;
+  const ghost = S.toyView === 'walk' && xsWalk;
   const bri = new Float32Array(NP * 2);
   for (let i = 0; i < NP * 2; i++) bri[i] = (1 - t) * x0s[i] + t * epss[i];
   plane.scatter(bri, { color: lamColor(lam), r: ghost ? 1.3 : 2.0, alpha: ghost ? 0.22 : 0.8 });
 
-  if (S.mode === 'train') {
+  if (S.toyView === 'bridge') {
     drawField(lam);
     drawTrainingPairs(lam);
-    note.textContent = '桥:x_t=(1−t)·x₀+t·ε(FM 坐标,620 对冻结样本随 λ 滑动)+ 所选 head 的真实场';
-    foot.innerHTML = `λ=<b>${lam.toFixed(2)}</b>  t=<b>${t.toFixed(3)}</b>(α=${a.toFixed(3)} σ=${s.toFixed(3)})· 金色箭头 = 5 个抽中的训练对此刻的<b>目标</b>(head=${S.head});灰箭头 = 网络当前的场。训练循环:抽 λ(看轴上撒点)→ 调桥 → 回归目标。`;
-  } else if (S.mode === 'infer') {
+    foot.innerHTML = `训练所见的混合分布:x_τ=(1−τ)x₀+τ·ε,当前 λ=<b>${lam.toFixed(2)}</b>(τ=<b>${t.toFixed(3)}</b>,α=${a.toFixed(3)} σ=${s.toFixed(3)})。` +
+      `金色箭头 = 5 个训练样本对此刻的回归目标(目标=<b>${S.head}</b>,卡③选择);灰箭头 = 网络 <b>${S.model}</b> 的实际输出场。`;
+  } else {
     if (xsWalk) {
       const sc = scOf(lam);
       const disp = new Float32Array(NP * 2);
       for (let i = 0; i < NP * 2; i++) disp[i] = xsWalk[i] / sc;
       for (const tr of trails) plane.path(new Float32Array(tr), { color: 'rgba(232,228,218,0.5)', width: 0.8, alpha: 0.5 });
       plane.scatter(disp, { color: lamColor(lam), r: 2.2, alpha: 0.95 });
-      note.textContent = '亮 = 采样器真轨迹 · 暗 = 桥(同 λ 边缘一致,逐点不同)';
+      foot.innerHTML = `采样器 = 广义 DDIM(η=${S.eta.toFixed(2)}),调度 <b>${S.sched}</b>,步 <b>${S.walkK}</b>/${S.N}。` +
+        `亮点 = 真实采样轨迹;暗点 = 训练混合(桥)。两团云的<b>形状</b>在每个 λ 都一致,但单个粒子早已离开它的桥搭档——分布相同,路径不同。`;
     } else {
-      note.textContent = '按「▶ 行走」:粒子沿所选网格走真采样器(广义 DDIM(η))';
+      foot.innerHTML = `按卡④的「▶」:620 个粒子从噪声端出发,沿所选步点走真实采样器。`;
     }
-    foot.innerHTML = `场=<b>${S.model}</b> · 网格=<b>${S.sched}</b> N=${S.N} η=${S.eta.toFixed(2)} · ` +
-      (xsWalk ? `步 <b>${S.walkK}</b>/${S.N} · 云的形状贴着桥走,单个粒子早已离开它的桥搭档——<b>边缘相同,路径不同</b>。` : `起点=λ_min 处的真实边缘(桥端)。`);
-  } else { // video
-    note.textContent = '时间轴模式:看轴上的 8 个帧游标';
-    foot.innerHTML = '视频 = 把"帧"变成轴上的多个游标。每帧内部仍是这同一张图里的一次行走。';
   }
 }
 
@@ -233,9 +237,10 @@ function drawDistill() {
       plane.path(new Float32Array(p.slice(ka * 2, kb * 2 + 2)), { color: '#B08FEA', width: 2.6, alpha: 0.95 });
     }
   }
-  note.textContent = 'FM 坐标 · 同 14 份种子:弯(教师)· 直(ReFlow)· 弦(一步=平均速度)';
   const sg = distillResults ? distillResults.straightness : null;
   foot.innerHTML =
-    `<b style="color:#D65077">教师 u_fm</b> 40 步 NFE=40 · <b style="color:#1FA9A3">ReFlow</b> 同 40 步(2 步漂移 ${sg ? sg.reflow.gap_2step.toFixed(4) : '…'} vs 教师 ${sg ? sg.teacher.gap_2step.toFixed(3) : '…'},132×) · <b>一步弦</b> NFE=1(MeanFlow 的 (r,t)=(0,1) 特例)<br>` +
-    `<span style="color:#B08FEA">紫色高亮</span> = 轴上 [r, λ] 区间在真轨迹上的那段弯路——flow map Φ<sub>r→t</sub> 学的就是把它一口吞掉;拖 r 和 λ 看它伸缩。`;
+    `同 14 份噪声种子,三个真实模型:<b style="color:#D65077">教师 u_fm(弯,40 步)</b> · ` +
+    `<b style="color:#1FA9A3">ReFlow 学生(直,同 40 步;2 步端点漂移 ${sg ? sg.reflow.gap_2step.toFixed(4) : '…'} vs 教师 ${sg ? sg.teacher.gap_2step.toFixed(3) : '…'} ≈ 132 倍改善)</b> · ` +
+    `<b>一步学生(虚线弦,NFE=1;= MeanFlow 取区间为全轴的特例)</b>。` +
+    `<span style="color:#B08FEA">紫色粗段</span> = 卡⑤区间 [r, λ] 在教师真轨迹上的对应弯路——区间映射 Φ 要一口吞掉的就是它,在卡⑤拖 r 看它伸缩。`;
 }
