@@ -4,6 +4,7 @@
 import { S } from './axis_main.js';
 import { vpFromLam, fmTFromLam } from './nn.js';
 import { AMP } from './axis_main.js';
+import { lamColor } from './charts.js';
 
 const CELL = 32, GAP = 2;
 const ROWKEY = ['x_t', 'x0h', 'epsh', 'vh', 'uh', 'score'];
@@ -15,6 +16,7 @@ const HEAD2ROW = { x0: 'x0h', D: 'x0h', eps: 'epsh', v: 'vh', u: 'uh', score: 's
 
 let A = null, sprite = null, trace = null, traceImg = null;
 let host, footEl, tiles = {}, stripCv, stripMark, pairDiv, traceDiv, traceCv;
+let sfDiv, sfX0 = null, sfEps = null, sfMask = null, sfRho = 0.4, sfSeed = 7;
 
 export async function initMnist(hostEl, foot) {
   host = hostEl; footEl = foot;
@@ -50,6 +52,21 @@ export async function initMnist(hostEl, foot) {
     const j = Math.max(0, Math.min(A.lams.length - 1, Math.floor((e.clientX - r.left) / (SW + 3))));
     import('./axis_main.js').then(m => m.setS({ lam: A.lams[j] }));
   });
+  // Self-Flow: per-token dual-lambda input construction (computed live from the real x0 & eps pixels)
+  sfDiv = document.createElement('div');
+  sfDiv.innerHTML = `
+    <div class="mn-cap" style="text-align:left;margin:2px 0 6px">
+      <b>Self-Flow 视角(卡②)</b>:整图一个 λ → 每个 token 自己的 λ。上下文 token 停在数据端(λ=+9),其余跟随主游标。</div>
+    <div class="mn-row">
+      <div class="mn-cell"><canvas id="sf-map" width="32" height="32" style="width:96px;height:96px"></canvas><div class="mn-cap">token-λ 地图<br>(颜色 = 主轴光谱)</div></div>
+      <div class="mn-cell"><canvas id="sf-mix" width="32" height="32" style="width:96px;height:96px"></canvas><div class="mn-cap">双 λ 混合输入<br><b id="sf-stat"></b></div></div>
+      <div style="flex:1;min-width:170px">
+        <div class="mn-cap" style="text-align:left">上下文比例 ρ <input type="range" id="sf-rho" min="0" max="0.9" step="0.05" value="0.4" style="width:100px;vertical-align:middle"> <span id="sf-rhov">0.40</span>
+        <button id="sf-roll" style="font-size:11px;padding:2px 8px;margin-left:6px">重掷 mask</button></div>
+        <div class="mn-cap" style="text-align:left;color:var(--ink3)">要推断噪 token,读干净 token 是唯一出路——信息不对称即表征监督。此处展示的是<b>输入构造本身</b>(真像素真公式);表征收益见论文训练对照。</div>
+      </div>
+    </div>`;
+
   // distill pair
   pairDiv = document.createElement('div'); pairDiv.id = 'mn-pair'; pairDiv.style.display = 'none';
   pairDiv.innerHTML = `
@@ -63,7 +80,69 @@ export async function initMnist(hostEl, foot) {
   capT.textContent = '一次真实 8 步 FM-Euler:上 x_t,下 x̂₀(与轴上行走器对齐)';
   traceDiv.append(capT);
 
-  host.append(tilesRow, stripWrap, traceDiv, pairDiv);
+  host.append(tilesRow, stripWrap, sfDiv, traceDiv, pairDiv);
+
+  // decode the real x0 / eps pixels once (inverting the export display mappings)
+  const grab = (src, lo, hi) => {
+    const img = new Image(); img.src = src;
+    return new Promise(res => {
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = 32; c.height = 32;
+        const g = c.getContext('2d');
+        g.drawImage(img, 0, 0);
+        const d = g.getImageData(0, 0, 32, 32).data;
+        const out = new Float32Array(32 * 32);
+        for (let i = 0; i < 1024; i++) out[i] = lo + d[i * 4] / 255 * (hi - lo);
+        res(out);
+      };
+      img.onerror = () => res(null);
+    });
+  };
+  [sfX0, sfEps] = await Promise.all([
+    grab('data/mnist/anatomy_x0.png', -1, 1),
+    grab('data/mnist/anatomy_eps.png', -3, 3),
+  ]);
+  rollMask();
+  document.getElementById('sf-rho').addEventListener('input', e => {
+    sfRho = +e.target.value;
+    document.getElementById('sf-rhov').textContent = sfRho.toFixed(2);
+    rollMask(); drawSelfFlow();
+  });
+  document.getElementById('sf-roll').addEventListener('click', () => { sfSeed++; rollMask(); drawSelfFlow(); });
+}
+
+function rollMask() {
+  // deterministic per-token context mask, 8x8 tokens of 4x4 px
+  let s = sfSeed >>> 0;
+  const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  sfMask = new Uint8Array(64);
+  for (let k = 0; k < 64; k++) sfMask[k] = rnd() < sfRho ? 1 : 0;
+}
+
+function drawSelfFlow() {
+  if (!sfX0 || !sfEps || !sfMask) return;
+  const LAM_CTX = 9;
+  const tOf = l => 1 / (1 + Math.exp(l / 2));
+  const tCtx = tOf(LAM_CTX), tNoisy = tOf(S.lam);
+  const map = document.getElementById('sf-map').getContext('2d');
+  const mix = document.getElementById('sf-mix').getContext('2d');
+  const im = mix.createImageData(32, 32);
+  for (let p = 0; p < 1024; p++) {
+    const px = p % 32, py = (p / 32) | 0;
+    const tok = ((py >> 2) << 3) + (px >> 2);
+    const t = sfMask[tok] ? tCtx : tNoisy;
+    const v = (1 - t) * sfX0[p] + t * sfEps[p];              // the actual dual-lambda input
+    const u8 = Math.max(0, Math.min(255, (v + 1.6) / 3.2 * 255));
+    im.data[p * 4] = im.data[p * 4 + 1] = im.data[p * 4 + 2] = u8;
+    im.data[p * 4 + 3] = 255;
+  }
+  mix.putImageData(im, 0, 0);
+  for (let tok = 0; tok < 64; tok++) {
+    map.fillStyle = lamColor(sfMask[tok] ? LAM_CTX : S.lam);
+    map.fillRect((tok % 8) * 4, (tok >> 3) * 4, 4, 4);
+  }
+  const nCtx = sfMask.reduce((a, b) => a + b, 0);
+  document.getElementById('sf-stat').textContent = `${64 - nCtx} 个 token @ λ=${S.lam.toFixed(1)} · ${nCtx} 个上下文 @ λ=9`;
 }
 
 function colBlend(lam) {
@@ -80,6 +159,8 @@ export function drawMnist() {
   const distill = S.toyView === 'distill';
   document.getElementById('mn-tiles').style.display = distill ? 'none' : '';
   stripCv.parentElement.style.display = distill ? 'none' : '';
+  if (sfDiv) sfDiv.style.display = distill ? 'none' : '';
+  if (!distill) drawSelfFlow();
   pairDiv.style.display = distill ? '' : 'none';
   traceDiv.style.display = (!distill && S.walkK > 0 && traceImg && traceImg.width) ? '' : 'none';
   if (distill) {
