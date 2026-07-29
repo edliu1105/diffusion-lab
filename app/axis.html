@@ -65,7 +65,16 @@
         <option value="x0_edm">x0_edm(本机训练,EDM 配方)</option>
       </select>
     </div>
-    <div class="plotwrap"><div class="plotlabel">误差放大系数 → x̂₀ · log(虚线 = ×1)</div><canvas id="cv-amp"></canvas><div class="leg" id="leg-amp"></div></div>
+    <div class="duo">
+      <div class="plotwrap">
+        <div class="plotlabel">(x₀, ε) 基底平面:目标 = 向量,路径 = 曲线</div>
+        <canvas id="cv-basis"></canvas>
+        <p class="mini">横轴 = x₀ 系数,纵轴 = ε 系数。任何量 A·x₀+B·ε 是一个点:五个预测目标是五支<b>固定读法的向量</b>;
+        三条路径是三条<b>曲线</b>——VP 走四分之一圆弧、Rectified Flow 走直弦、EDM 走 α=1 竖线,端点相同。
+        v̂ 永远垂直于 x_t(正交小方块),TrigFlow 的 φ 就是 x_t 的极角。拖平面移动 λ;点向量端点可切换预测目标。(此视角改编自你提供的参考页)</p>
+      </div>
+      <div class="plotwrap"><div class="plotlabel">误差放大系数 → x̂₀ · log(虚线 = ×1)</div><canvas id="cv-amp"></canvas><div class="leg" id="leg-amp"></div></div>
+    </div>
   </section>
 
   <section class="card" id="card-sample">
@@ -107,10 +116,16 @@
         <h2>探头 A · 2D 玩具分布(散点 → 六峰高斯混合)</h2>
         <p class="how">显示坐标 = Rectified Flow 的直线路径坐标 x_τ=(1−τ)x₀+τ·ε(直线在此坐标下保持直线)。620 对 (x₀, ε) 冻结配对随游标连续形变;箭头 = 上方③选中目标的真实网络输出。</p>
         <div class="seg" id="toy-tabs">
-          <button data-v="bridge" class="on">训练混合</button><button data-v="walk">采样轨迹</button><button data-v="distill">蒸馏轨迹</button>
+          <button data-v="quad" class="on">四联同屏</button><button data-v="bridge">训练混合</button><button data-v="walk">采样轨迹</button><button data-v="distill">蒸馏轨迹</button>
         </div>
       </div>
       <canvas id="ax-toy"></canvas>
+      <div id="toy-quad">
+        <div class="qcell"><div class="qcap">训练混合 x_τ</div><canvas id="q0"></canvas></div>
+        <div class="qcell"><div class="qcap">预测目标场(卡③选中)</div><canvas id="q1"></canvas></div>
+        <div class="qcell"><div class="qcap">采样轨迹(卡④ ▶)</div><canvas id="q2"></canvas></div>
+        <div class="qcell"><div class="qcap">蒸馏:弯 · 直 · 弦</div><canvas id="q3"></canvas></div>
+      </div>
       <p class="note" id="toy-foot"></p>
     </div>
     <div class="card probe" id="card-mnist">

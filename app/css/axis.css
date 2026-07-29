@@ -69,6 +69,15 @@ a.ref:hover { background: rgba(120, 168, 255, 0.12); text-decoration: none; }
 .probe .how { font-size: 12.5px; }
 #toy-tabs { margin-top: 4px; }
 #ax-toy { display: block; width: 100%; border-radius: 8px; background: #0B0E12; cursor: crosshair; margin-top: 10px; }
+#toy-quad { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.qcell .qcap { font-family: var(--mono); font-size: 10px; color: var(--ink3); letter-spacing: 0.08em; margin-bottom: 3px; }
+.qcell canvas { display: block; width: 100%; border-radius: 6px; background: #0B0E12; }
+
+.duo { display: grid; grid-template-columns: 350px 1fr; gap: 22px; align-items: start; }
+@media (max-width: 980px) { .duo { grid-template-columns: 1fr; } }
+.mini { font-size: 12px; color: var(--ink3); line-height: 1.7; margin: 8px 0 0; }
+.mini b { color: var(--ink2); font-weight: 600; }
+#cv-basis { cursor: crosshair; }
 
 /* MNIST probe */
 #ax-mnist { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }

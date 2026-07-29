@@ -76,7 +76,9 @@ export function initCards() {
   TIMEROWS.forEach((_, i) => reg(`trow-${i}`, 26));
   // plots
   reg('cv-dens', 130); reg('cv-wts', 112); reg('cv-amp', 150);
+  reg('cv-basis', 300);
   reg('cv-grid', 72); reg('cv-jump', 158); reg('cv-video', 128);
+  basisHit();
   // legends
   document.getElementById('leg-dens').innerHTML = DENS.map(d =>
     `<span><i style="background:${d.color}"></i>${d.label}</span>`).join('');
@@ -127,8 +129,161 @@ function buildReadouts() {
 // ---------------- draw everything ----------------
 export function drawCards() {
   if (!cvs['cv-master']) return;
-  drawMaster(); drawTimeRows(); drawDens(); drawWts(); drawAmp(); drawGrid(); drawJump();
+  drawMaster(); drawTimeRows(); drawDens(); drawWts(); drawAmp(); drawBasis(); drawGrid(); drawJump();
   drawVideoCard();
+}
+
+// ---------------- (x0, eps) coefficient-basis plane ----------------
+// Any A·x0 + B·eps is the point (A, B). Targets are fixed reading-vectors;
+// schedules are curves; v is always perpendicular to x_t; TrigFlow's phi is x_t's polar angle.
+const BR = { x0: -1.35, x1: 1.42, y0: -1.5, y1: 1.55 };   // coefficient ranges
+function bx(id, v) { return (v - BR.x0) / (BR.x1 - BR.x0) * cvs[id].w; }
+function by(id, v) { const { h } = cvs[id]; return h - (v - BR.y0) / (BR.y1 - BR.y0) * h; }
+
+function drawBasis() {
+  const id = 'cv-basis';
+  if (!cvs[id]) return;
+  const { ctx, w, h } = cvs[id];
+  ctx.clearRect(0, 0, w, h);
+  ctx.font = `11px ${MONO}`;
+  // axes
+  ctx.strokeStyle = 'rgba(154,163,178,0.3)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(bx(id, BR.x0), by(id, 0)); ctx.lineTo(bx(id, BR.x1), by(id, 0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx(id, 0), by(id, BR.y0)); ctx.lineTo(bx(id, 0), by(id, BR.y1)); ctx.stroke();
+  ctx.fillStyle = '#7B8698'; ctx.textAlign = 'left';
+  ctx.fillText('x₀ 系数 →', bx(id, BR.x1) - 62, by(id, 0) + 14);
+  ctx.fillText('ε 系数 ↑', bx(id, 0) + 5, by(id, BR.y1) + 12);
+  // unit ticks
+  for (const v of [-1, 1]) {
+    ctx.fillStyle = '#5C6675';
+    ctx.fillText(String(v), bx(id, v) - 3, by(id, 0) + 13);
+    if (v === 1) ctx.fillText('1', bx(id, 0) - 12, by(id, v) + 4);
+  }
+  const a2 = 1 / (1 + Math.exp(-S.lam)), a = Math.sqrt(a2), s = Math.sqrt(1 - a2);
+  const t = 1 / (1 + Math.exp(S.lam / 2));
+  const sig = Math.exp(-S.lam / 2);
+  // --- three paths, same endpoints (eps at (0,1) -> x0 at (1,0)) ---
+  // VP: quarter arc
+  ctx.strokeStyle = 'rgba(80,131,220,0.65)'; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  for (let k = 0; k <= 60; k++) {
+    const th = k / 60 * Math.PI / 2;
+    const X2 = bx(id, Math.cos(th)), Y2 = by(id, Math.sin(th));
+    k ? ctx.lineTo(X2, Y2) : ctx.moveTo(X2, Y2);
+  }
+  ctx.stroke();
+  // RF: straight chord
+  ctx.strokeStyle = 'rgba(214,80,119,0.75)';
+  ctx.beginPath(); ctx.moveTo(bx(id, 0), by(id, 1)); ctx.lineTo(bx(id, 1), by(id, 0)); ctx.stroke();
+  // EDM: vertical ray at alpha=1
+  ctx.strokeStyle = 'rgba(194,131,36,0.7)';
+  ctx.beginPath(); ctx.moveTo(bx(id, 1), by(id, 0)); ctx.lineTo(bx(id, 1), by(id, 1.42)); ctx.stroke();
+  arrowTip(id, bx(id, 1), by(id, 1.42), 0, -1, 'rgba(194,131,36,0.7)');
+  ctx.fillStyle = 'rgba(80,131,220,0.9)'; ctx.fillText('VP 弧', bx(id, 0.84), by(id, 0.76));
+  ctx.fillStyle = 'rgba(214,80,119,0.95)'; ctx.fillText('RF 弦', bx(id, 0.30), by(id, 0.62));
+  ctx.fillStyle = 'rgba(194,131,36,0.95)'; ctx.fillText('EDM', bx(id, 1.03), by(id, 1.3));
+  // current points on each path (same lambda)
+  dot(id, a, s, lamColor(S.lam), 5);                       // VP: (alpha, sigma)
+  dot(id, 1 - t, t, 'rgba(214,80,119,0.95)', 3.5);         // RF: (1-t, t)
+  dot(id, 1, Math.min(sig, 1.38), 'rgba(194,131,36,0.95)', 3.5); // EDM: (1, sigma)
+  // --- target vectors from origin ---
+  const targets = basisTargets(a, s, sig);
+  for (const tg of targets) {
+    const sel = tg.key === S.head;
+    vec(id, tg.cx, tg.cy, tg.color, sel ? 2.6 : 1.4, sel ? 1 : 0.6);
+    ctx.fillStyle = tg.color; ctx.globalAlpha = sel ? 1 : 0.75;
+    ctx.fillText(tg.lab, bx(id, tg.cx) + tg.dx, by(id, tg.cy) + tg.dy);
+    ctx.globalAlpha = 1;
+  }
+  // x_t vector + right-angle marker with v
+  vec(id, a, s, '#E9EDF4', 2.2, 1);
+  ctx.fillStyle = '#E9EDF4';
+  ctx.fillText('x_t', bx(id, a) + 7, by(id, s) - 7);
+  rightAngle(id, a, s);
+}
+function basisTargets(a, s, sig) {
+  const scoreB = -Math.min(1 / Math.max(s, 1e-3), 1.42);
+  return [
+    { key: 'x0', cx: 1, cy: 0, color: '#9AA3B2', lab: 'x̂₀ / EDM-D', dx: 6, dy: 18 },
+    { key: 'eps', cx: 0, cy: 1, color: '#5083DC', lab: 'ε̂', dx: -18, dy: 0 },
+    { key: 'v', cx: -s, cy: a, color: '#B08FEA', lab: 'v̂ ⟂ x_t', dx: -8, dy: -8 },
+    { key: 'u', cx: -1, cy: 1, color: '#D65077', lab: 'û = ε−x₀', dx: -12, dy: -8 },
+    { key: 'score', cx: 0, cy: scoreB, color: '#E2B33C', lab: `score = −ε/σ ${1 / s > 1.42 ? '(×' + (1 / s).toFixed(1) + ' 出界)' : ''}`, dx: 8, dy: 4 },
+  ];
+}
+function vec(id, cx, cy, color, width, alpha) {
+  const { ctx } = cvs[id];
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color; ctx.lineWidth = width;
+  const x0p = bx(id, 0), y0p = by(id, 0), x1p = bx(id, cx), y1p = by(id, cy);
+  ctx.beginPath(); ctx.moveTo(x0p, y0p); ctx.lineTo(x1p, y1p); ctx.stroke();
+  const ang = Math.atan2(y1p - y0p, x1p - x0p);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x1p, y1p);
+  ctx.lineTo(x1p - 8 * Math.cos(ang - 0.4), y1p - 8 * Math.sin(ang - 0.4));
+  ctx.lineTo(x1p - 8 * Math.cos(ang + 0.4), y1p - 8 * Math.sin(ang + 0.4));
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function dot(id, cx, cy, color, r) {
+  const { ctx } = cvs[id];
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(bx(id, cx), by(id, cy), r, 0, 7); ctx.fill();
+}
+function rightAngle(id, a, s) {
+  const { ctx } = cvs[id];
+  const k = 0.12;
+  const p1 = [a * (1 - k) , s * (1 - k)];
+  const p2 = [p1[0] - s * k, p1[1] + a * k];
+  const p3 = [a - s * k, s + a * k];
+  ctx.strokeStyle = 'rgba(176,143,234,0.8)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(bx(id, p1[0]), by(id, p1[1]));
+  ctx.lineTo(bx(id, p2[0]), by(id, p2[1]));
+  ctx.lineTo(bx(id, p3[0]), by(id, p3[1]));
+  ctx.stroke();
+}
+function arrowTip(id, x, y, dx, dy, color) {
+  const { ctx } = cvs[id];
+  const ang = Math.atan2(dy, dx);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x - 8 * Math.cos(ang - 0.4), y - 8 * Math.sin(ang - 0.4));
+  ctx.lineTo(x - 8 * Math.cos(ang + 0.4), y - 8 * Math.sin(ang + 0.4));
+  ctx.closePath(); ctx.fill();
+}
+function basisHit() {
+  const cv = cvs['cv-basis'].cv;
+  let dragB = false;
+  const toCoef = e => {
+    const rect = cv.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (cvs['cv-basis'].w / rect.width);
+    const py = (e.clientY - rect.top) * (cvs['cv-basis'].h / rect.height);
+    return [BR.x0 + px / cvs['cv-basis'].w * (BR.x1 - BR.x0), BR.y0 + (cvs['cv-basis'].h - py) / cvs['cv-basis'].h * (BR.y1 - BR.y0)];
+  };
+  cv.addEventListener('mousedown', e => {
+    const [cx, cy] = toCoef(e);
+    const a2 = 1 / (1 + Math.exp(-S.lam)), a = Math.sqrt(a2), s = Math.sqrt(1 - a2);
+    for (const tg of basisTargets(a, s, Math.exp(-S.lam / 2))) {
+      if (Math.hypot(cx - tg.cx, cy - tg.cy) < 0.14) {
+        const b = document.querySelector(`#ax-heads [data-h="${tg.key}"]`);
+        if (b) b.click();
+        return;
+      }
+    }
+    dragB = true; move(e);
+  });
+  window.addEventListener('mousemove', e => { if (dragB) move(e); });
+  window.addEventListener('mouseup', () => dragB = false);
+  function move(e) {
+    const [cx, cy] = toCoef(e);
+    if (cx <= 0.01 && cy <= 0.01) return;
+    const th = Math.atan2(Math.max(cy, 0.001), Math.max(cx, 0.001));   // polar angle -> lambda
+    const lam = 2 * Math.log(Math.cos(th) / Math.max(Math.sin(th), 1e-4));
+    setS({ lam: Math.max(S.lamMin, Math.min(S.lamMax, lam)) });
+  }
 }
 
 function drawMaster() {
