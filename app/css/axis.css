@@ -1,55 +1,85 @@
-/* λ 总控台 — one instrument, one state, three synced views. */
+/* 统一 λ 轴实验台 v2 — text lives in HTML, canvases draw only data.
+   Card stack with one shared lambda→pixel mapping; sticky master axis. */
 
-.axis-body { overflow-x: hidden; }
-#ax-head {
-  display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap;
-  padding: 26px 40px 14px; border-bottom: 1px solid var(--line);
+.axis-body { overflow-x: hidden; background: #0C0F15; }
+#ax-head { max-width: 1180px; margin: 0 auto; padding: 34px 32px 10px; }
+#ax-head h1 { font-size: 32px; font-weight: 300; letter-spacing: 0.06em; margin: 10px 0 12px; }
+#ax-head .lede { font-size: 15.5px; color: var(--ink2); max-width: 62em; line-height: 1.85; margin: 0 0 8px; }
+#ax-head .lede b { color: var(--ink); }
+#ax-head .hint { font-size: 13.5px; color: var(--data); margin: 6px 0 14px; }
+
+/* sticky master axis */
+#ax-master {
+  position: sticky; top: 0; z-index: 60;
+  background: rgba(12, 15, 21, 0.94); backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line2);
+  padding: 10px 32px 8px;
 }
-#ax-head h1 { font-size: 30px; font-weight: 250; letter-spacing: 0.08em; margin: 6px 0 4px; }
-#ax-head .sub { font-size: 13px; color: var(--ink2); max-width: 62em; }
-#ax-modes { margin-left: auto; }
-#ax-modes button { padding: 8px 18px; font-size: 14px; }
-.backlink { font-size: 12.5px; color: var(--ink3); white-space: nowrap; }
+#ax-master > * { max-width: 1180px; margin: 0 auto; }
+#cv-master { display: block; width: 100%; cursor: ew-resize; }
+#ax-readouts { display: flex; gap: 18px; flex-wrap: wrap; padding-top: 6px; }
+#ax-readouts .ro { font-size: 12px; color: var(--ink3); }
+#ax-readouts .ro b { font-family: var(--mono); font-size: 12.5px; color: var(--ink); font-weight: normal; margin-left: 5px; }
+#ax-readouts .ro.lamro b { color: var(--data); font-size: 13.5px; }
 
-#ax-main { padding: 0 40px 60px; max-width: 1560px; margin: 0 auto; }
-#ax-axis-wrap { padding: 14px 0 4px; }
-#ax-axis { display: block; width: 100%; }
+#ax-main { max-width: 1180px; margin: 0 auto; padding: 22px 32px 80px; display: flex; flex-direction: column; gap: 22px; }
 
-#ax-controls {
-  display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
-  padding: 10px 2px 14px; border-bottom: 1px solid var(--line);
+.card { background: #131823; border: 1px solid #232B39; border-radius: 12px; padding: 22px 26px 20px; }
+.cardhead h2 { font-size: 17.5px; font-weight: 600; margin: 0 0 8px; letter-spacing: 0.01em; }
+.cardhead .how { font-size: 14px; color: var(--ink2); line-height: 1.8; margin: 0 0 10px; max-width: 66em; }
+.cardhead .how b { color: var(--ink); font-weight: 600; }
+
+.refwrap { display: flex; gap: 8px; flex-wrap: wrap; margin: 2px 0 6px; }
+a.ref {
+  font-family: var(--mono); font-size: 10.5px; color: #78A8FF; text-decoration: none;
+  border: 1px solid rgba(120, 168, 255, 0.35); border-radius: 20px; padding: 2px 10px;
+  white-space: nowrap;
 }
-#ax-controls .grp { display: flex; gap: 8px; align-items: center; }
-#ax-controls label { font-size: 11.5px; color: var(--ink3); font-family: var(--mono); letter-spacing: 0.08em; white-space: nowrap; }
-#ax-controls input[type=range] { width: 120px; }
-#ax-controls .val { min-width: 34px; font-size: 12px; }
-#ax-controls .seg button { padding: 4px 10px; font-size: 12.5px; }
+a.ref:hover { background: rgba(120, 168, 255, 0.12); text-decoration: none; }
 
-#ax-probes { display: grid; grid-template-columns: minmax(430px, 560px) 1fr; gap: 26px; padding-top: 18px; align-items: start; }
-@media (max-width: 1100px) { #ax-probes { grid-template-columns: 1fr; } }
-.probe { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px 10px; }
-.probehead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
-.probehead .pid { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.22em; color: var(--data); }
-.probehead b { font-size: 14.5px; }
-.probehead .pnote { font-size: 11px; color: var(--ink3); margin-left: auto; }
-.probefoot { font-family: var(--mono); font-size: 11.5px; color: var(--ink2); padding-top: 8px; line-height: 1.7; min-height: 38px; }
-.probefoot b { color: var(--ink); font-weight: normal; }
-#ax-toy { display: block; width: 100%; border-radius: 6px; background: #0B0E12; cursor: crosshair; }
+.rowlist { display: flex; flex-direction: column; }
+.trow { display: grid; grid-template-columns: 240px 1fr 130px; align-items: center; gap: 14px; padding: 3px 0; }
+.trow + .trow { border-top: 1px solid rgba(154, 163, 178, 0.07); }
+.trow .tname { font-size: 13px; color: var(--ink); }
+.trow .tname .tsub { display: block; font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+.trow canvas { display: block; width: 100% !important; max-width: 100%; }
+.trow .tread { font-family: var(--mono); font-size: 12.5px; color: var(--ink); text-align: right; }
+
+.plotwrap { margin: 12px 0 4px; }
+.plotlabel { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; color: var(--ink3); margin-bottom: 4px; }
+.plotwrap canvas { display: block; width: 100%; }
+.leg { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
+.leg span { font-size: 12px; color: var(--ink2); display: inline-flex; align-items: center; gap: 6px; }
+.leg i { width: 16px; height: 3px; border-radius: 1px; display: inline-block; }
+.leg i.dash { background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 7px); height: 2px; }
+
+.ctlrow { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 6px 0 12px; }
+.ctllab { font-size: 12px; color: var(--ink3); }
+.ctlrow input[type=range] { width: 130px; }
+.ctlrow .val { font-family: var(--mono); font-size: 12px; color: var(--ink); min-width: 30px; }
+.ctlrow .seg button, #toy-tabs button, #ax-vpreset button { font-size: 13px; }
+
+#card-sample canvas, #card-distill canvas, #card-video canvas { display: block; width: 100%; }
+.note { font-size: 13px; color: var(--ink2); line-height: 1.75; margin: 10px 0 0; }
+.note b { color: var(--ink); font-weight: normal; font-family: var(--mono); }
+
+#probes { display: grid; grid-template-columns: minmax(420px, 530px) 1fr; gap: 22px; align-items: start; }
+@media (max-width: 1060px) { #probes { grid-template-columns: 1fr; } }
+.probe .cardhead h2 { font-size: 15.5px; }
+.probe .how { font-size: 12.5px; }
+#toy-tabs { margin-top: 4px; }
+#ax-toy { display: block; width: 100%; border-radius: 8px; background: #0B0E12; cursor: crosshair; margin-top: 10px; }
 
 /* MNIST probe */
-#ax-mnist { display: flex; flex-direction: column; gap: 10px; }
+#ax-mnist { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
 .mn-row { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
 .mn-cell { text-align: center; position: relative; }
-.mn-cell canvas { image-rendering: pixelated; border: 1px solid var(--line2); border-radius: 5px; background: #000; display: block; }
+.mn-cell canvas { image-rendering: pixelated; border: 1px solid var(--line2); border-radius: 6px; background: #000; display: block; }
 .mn-cell.hl canvas { border-color: var(--data); box-shadow: 0 0 0 1px var(--data); }
-.mn-cap { font-family: var(--mono); font-size: 10px; color: var(--ink2); margin-top: 4px; line-height: 1.45; }
+.mn-cap { font-family: var(--mono); font-size: 10px; color: var(--ink2); margin-top: 5px; line-height: 1.5; }
 .mn-cap b { color: var(--ink); font-weight: normal; }
-#mn-strip { position: relative; }
 #mn-strip canvas { display: block; border-radius: 4px; cursor: pointer; }
-#mn-pair { display: flex; gap: 12px; }
+#mn-pair { display: flex; gap: 12px; flex-wrap: wrap; }
 
-#ax-foot { padding: 26px 2px 0; font-size: 11.5px; color: var(--ink3); font-family: var(--mono); line-height: 1.8; }
-#ax-foot a { color: var(--ddim); }
-
-/* cursor accent chip */
-.lamchip { font-family: var(--mono); font-size: 11px; padding: 1px 8px; border-radius: 4px; border: 1px solid; }
+#ax-foot { padding: 4px 2px 0; font-size: 12px; color: var(--ink3); line-height: 1.9; }
+#ax-foot a { color: #78A8FF; }

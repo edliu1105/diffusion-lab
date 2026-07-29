@@ -3,71 +3,147 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>λ 总控台 · 一根轴,整个领域</title>
+<title>统一 λ 轴实验台 · 调度 / formulation / 蒸馏</title>
 <link rel="stylesheet" href="css/lab.css">
 <link rel="stylesheet" href="css/axis.css">
 </head>
 <body class="axis-body">
 
 <header id="ax-head">
-  <div>
-    <div class="eyebrow">DIFFUSION BENCH · <span class="mode exp">仪器</span> · 所有模型现场推理,零示意图</div>
-    <h1>λ 总控台</h1>
-    <div class="sub">一根 logSNR 轴。调度是它的刻度,formulation 是它上面的坐标衣,训练是在它上面撒钱,推理是在它上面行走,蒸馏是在它上面跳跃。拖动游标,三个世界同步。</div>
-  </div>
-  <div id="ax-modes" class="seg">
-    <button data-m="train" class="on">训练</button><button data-m="infer">推理</button><button data-m="distill">蒸馏</button><button data-m="video">时间轴·视频</button>
-  </div>
-  <a href="index.html" class="backlink">← 实验室全册</a>
+  <div class="eyebrow">DIFFUSION BENCH · 所有曲线实时计算 · 2D 场与轨迹来自本机训练的真实网络 · 28×28 张量来自真实 UNet 输出</div>
+  <h1>统一 λ 轴实验台</h1>
+  <p class="lede">所有 diffusion / flow 算法共享一次线性混合 <code>x_t = α·x₀ + σ·ε</code>,唯一的自然坐标是
+  <b>λ = logSNR = 2·log(α/σ)</b>。调度是这根轴上的刻度,预测目标是它上面的坐标选择,训练在它上面分配样本,
+  采样沿它数值积分,蒸馏把它的区间压成一跳。<span class="refwrap" id="hd-ref"></span></p>
+  <p class="hint">拖动下方任意图中的<b>白色游标</b>(或按 ← →,Shift 加速)——本页所有图与两个探头同步。</p>
 </header>
 
+<!-- sticky master axis -->
+<div id="ax-master">
+  <canvas id="cv-master"></canvas>
+  <div id="ax-readouts"></div>
+</div>
+
 <main id="ax-main">
-  <!-- ═══════════ THE AXIS ═══════════ -->
-  <section id="ax-axis-wrap">
-    <canvas id="ax-axis"></canvas>
-    <div id="ax-controls">
-      <div class="grp" id="g-head"><label>坐标衣 head</label><div class="seg" id="ax-heads">
+
+  <section class="card" id="card-time">
+    <div class="cardhead">
+      <h2>① 时间参数化:每家的 t 都是 λ 的换算</h2>
+      <p class="how">每行是一种论文里的"时间"变量,刻度点 = 该变量的均匀网格映射到 λ 轴上。读法:<b>均匀的是各家自己的 t / σ / φ,从来不是 λ</b>;SD3 的分辨率 shift 在 λ 轴上是整体平移 −2·ln s。右侧数字 = 游标处的换算读数。</p>
+      <div class="refwrap" id="time-refs"></div>
+    </div>
+    <div class="rowlist" id="time-rows"></div>
+  </section>
+
+  <section class="card" id="card-train">
+    <div class="cardhead">
+      <h2>② 训练:在 λ 上抽样本 × 给损失定权重</h2>
+      <p class="how">上图:训练时噪声等级的采样密度 p(λ)——各家把梯度花在哪一段。下图:把各家原生损失统一换算成 ‖x̂₀−x₀‖² 后的等效权重 w(λ)(log 刻度,只看形状)。两者相乘才是真实的训练侧重。</p>
+      <div class="refwrap" id="train-refs"></div>
+    </div>
+    <div class="plotwrap"><div class="plotlabel">采样密度 p(λ)</div><canvas id="cv-dens"></canvas><div class="leg" id="leg-dens"></div></div>
+    <div class="plotwrap"><div class="plotlabel">等效损失权重 w(λ) · log</div><canvas id="cv-wts"></canvas><div class="leg" id="leg-wts"></div></div>
+    <p class="note">探头 A 中的金色箭头 = 5 个训练样本对在当前 λ 的回归目标(按下方③选中的预测目标显示)。</p>
+  </section>
+
+  <section class="card" id="card-target">
+    <div class="cardhead">
+      <h2>③ 预测目标:同一个 E[x₀|x_t] 的五种线性打包</h2>
+      <p class="how">网络唯一学到的对象是后验均值 E[x₀|x_t](经 Tweedie 公式 ↔ score)。ε̂ / x̂₀ / v̂ / û / score 都是它的仿射改写——选择目标 = 选择"一份网络输出误差换多少 x̂₀ 误差"(下图,log 刻度)。<b>ε̂ 在高噪端病态(λ=−8 处 ×55),x̂₀ 与 score 在另一侧病态,v̂ / û / EDM-D 全程有界。</b>选中的目标同时决定探头 A 的向量场与探头 B 的高亮张量。</p>
+      <div class="refwrap" id="target-refs"></div>
+    </div>
+    <div class="ctlrow">
+      <span class="ctllab">预测目标</span>
+      <div class="seg" id="ax-heads">
         <button data-h="x0">x̂₀</button><button data-h="eps">ε̂</button><button data-h="v" class="on">v̂</button><button data-h="u">û</button><button data-h="score">score</button><button data-h="D">EDM-D</button>
-      </div></div>
-      <div class="grp" id="g-model"><label>场</label><select id="ax-model">
-        <option value="u_fm" selected>u_fm(真网络)</option>
-        <option value="analytic">解析真值</option>
-        <option value="eps_ddpm">eps_ddpm</option>
-        <option value="x0_edm">x0_edm</option>
-      </select></div>
-      <div class="grp" id="g-sched"><label>调度/网格</label><select id="ax-sched">
-        <option value="rf" selected>RF · 均匀 t</option>
-        <option value="rf_shift">RF + shift s=3(SD3)</option>
+      </div>
+      <span class="ctllab">2D 场来源</span>
+      <select id="ax-model">
+        <option value="u_fm" selected>u_fm(本机训练的 flow matching 网络)</option>
+        <option value="analytic">解析最优(高斯混合闭式解)</option>
+        <option value="eps_ddpm">eps_ddpm(本机训练,ε-prediction)</option>
+        <option value="x0_edm">x0_edm(本机训练,EDM 配方)</option>
+      </select>
+    </div>
+    <div class="plotwrap"><div class="plotlabel">误差放大系数 → x̂₀ · log(虚线 = ×1)</div><canvas id="cv-amp"></canvas><div class="leg" id="leg-amp"></div></div>
+  </section>
+
+  <section class="card" id="card-sample">
+    <div class="cardhead">
+      <h2>④ 采样:沿 λ 轴数值积分</h2>
+      <p class="how">点 = 所选调度的实际步点位置。▶ 让 2D 探头的 620 个粒子沿这些步点走真实采样器(广义 DDIM:η=0 确定性,η=1 等价 DDPM 祖先采样;每一步"先按 η 份额重掺噪声、再向数据端走")。</p>
+      <div class="refwrap" id="sample-refs"></div>
+    </div>
+    <div class="ctlrow">
+      <span class="ctllab">步点调度</span>
+      <select id="ax-sched">
+        <option value="rf" selected>Rectified Flow · 均匀 t</option>
+        <option value="rf_shift">RF + SD3 shift(s=3)</option>
         <option value="edm">EDM · Karras ρ=7</option>
         <option value="cosine">VP-cosine · 均匀 t</option>
-        <option value="logsnr">均匀 λ(DDIM)</option>
-      </select></div>
-      <div class="grp" id="g-n"><label>步数 N</label><input type="range" id="ax-n" min="2" max="48" step="1" value="16"><span class="val" id="ax-nv">16</span></div>
-      <div class="grp" id="g-eta"><label>随机性 η/churn</label><input type="range" id="ax-eta" min="0" max="1" step="0.05" value="0"><span class="val" id="ax-etav">0.00</span></div>
-      <button class="primary" id="ax-play">▶ 行走</button>
-      <div class="grp" id="g-video" style="display:none"><label>帧调度</label><div class="seg" id="ax-vpreset">
-        <button data-v="offline" class="on">离线·整段</button><button data-v="df">Diffusion Forcing</button><button data-v="stream">流式 AR</button>
-      </div></div>
+        <option value="logsnr">均匀 λ</option>
+      </select>
+      <span class="ctllab">步数 N</span><input type="range" id="ax-n" min="2" max="48" step="1" value="16"><span class="val" id="ax-nv">16</span>
+      <span class="ctllab">随机性 η</span><input type="range" id="ax-eta" min="0" max="1" step="0.05" value="0"><span class="val" id="ax-etav">0.00</span>
+      <button class="primary" id="ax-play">▶ 在探头 A 里走一遍</button>
+      <span class="val" id="ax-nfe"></span>
+    </div>
+    <canvas id="cv-grid"></canvas>
+  </section>
+
+  <section class="card" id="card-distill">
+    <div class="cardhead">
+      <h2>⑤ 蒸馏:把一段 λ 区间的积分压成一跳</h2>
+      <p class="how">教师用几十小步走完整根轴;学生学"区间映射":Consistency 从任意 λ 直接跳到数据端;CTM / MeanFlow 学任意区间 [r → λ] 的映射(= 平均速度 × 区间长,<b>拖动青色 r 游标</b>看区间伸缩);Progressive Distillation 反复两步并一步;DMD 只要求端点分布一致、不学轨迹;ReFlow 不改跳法、改路(把教师轨迹拉直,见探头 A)。</p>
+      <div class="refwrap" id="distill-refs"></div>
+    </div>
+    <canvas id="cv-jump"></canvas>
+    <p class="note" id="distill-note"></p>
+  </section>
+
+  <section id="probes">
+    <div class="card probe" id="card-toy">
+      <div class="cardhead">
+        <h2>探头 A · 2D 玩具分布(散点 → 六峰高斯混合)</h2>
+        <p class="how">显示坐标 = Rectified Flow 的直线路径坐标 x_τ=(1−τ)x₀+τ·ε(直线在此坐标下保持直线)。620 对 (x₀, ε) 冻结配对随游标连续形变;箭头 = 上方③选中目标的真实网络输出。</p>
+        <div class="seg" id="toy-tabs">
+          <button data-v="bridge" class="on">训练混合</button><button data-v="walk">采样轨迹</button><button data-v="distill">蒸馏轨迹</button>
+        </div>
+      </div>
+      <canvas id="ax-toy"></canvas>
+      <p class="note" id="toy-foot"></p>
+    </div>
+    <div class="card probe" id="card-mnist">
+      <div class="cardhead">
+        <h2>探头 B · 28×28 手写数字的全部中间张量</h2>
+        <p class="how">同一张真实数字、同一份噪声,在游标 λ 处的六个张量。除 x_t 外全部由本机训练的 4.5M 参数 UNet 现场前向得到(预渲染于 11 个 λ 档,档间交叉淡化)。点击底部长条可跳转 λ。</p>
+      </div>
+      <div id="ax-mnist"></div>
+      <p class="note" id="mn-foot"></p>
     </div>
   </section>
 
-  <!-- ═══════════ TWO PROBES ═══════════ -->
-  <section id="ax-probes">
-    <div id="ax-toy-wrap" class="probe">
-      <div class="probehead"><span class="pid">探头 A</span><b>2D 玩具世界</b><span class="pnote" id="toy-note"></span></div>
-      <canvas id="ax-toy"></canvas>
-      <div class="probefoot" id="toy-foot"></div>
+  <section class="card" id="card-video">
+    <div class="cardhead">
+      <h2>⑥ 延伸:视频 / 自回归 / 世界模型 —— 多个游标,同一根轴</h2>
+      <p class="how">视频模型的差异可以读成"每一帧此刻站在 λ 轴哪里":整段扩散 = 全部帧绑成一叠齐降;Diffusion Forcing = 每帧独立噪声等级,过去干净、未来更噪;流式因果生成 = 历史帧停在数据端(进 KV cache),当前帧用 1–4 步俯冲。记忆、动作、世界状态不在这根轴上,不在本页范围。</p>
+      <div class="refwrap" id="video-refs"></div>
+      <div class="seg" id="ax-vpreset">
+        <button data-v="offline" class="on">整段扩散</button><button data-v="df">Diffusion Forcing</button><button data-v="stream">流式因果</button>
+      </div>
     </div>
-    <div id="ax-mnist-wrap" class="probe">
-      <div class="probehead"><span class="pid">探头 B</span><b>MNIST 张量</b><span class="pnote" id="mn-note">真 UNet 输出,非示意</span></div>
-      <div id="ax-mnist"></div>
-      <div class="probefoot" id="mn-foot"></div>
-    </div>
+    <canvas id="cv-video"></canvas>
+    <p class="note" id="video-note"></p>
+  </section>
+
+  <section class="card" id="card-refs">
+    <div class="cardhead"><h2>参考文献(本页每个对象的出处)</h2></div>
+    <div class="refwrap" id="all-refs"></div>
   </section>
 
   <footer id="ax-foot">
-    快捷键:←→ 微调 λ · 空格 行走/暂停 · 记忆/动作/KV cache 不住在这根轴上,故不画。
-    全部数字可复算:模型与数据同 <a href="index.html">实验室</a>,浏览器↔PyTorch 对拍见 §11.3。
+    快捷键:← → 移动 λ(Shift 大步)· 空格 = 采样播放/暂停 · URL 可携带状态(如 <code>?lam=2.5&head=u</code>)·
+    2D 模型与 MNIST 资产的训练/导出代码见 <a href="index.html">实验室全册</a>(附录 11.2 复现命令,11.3 浏览器↔PyTorch 对拍)。
   </footer>
 </main>
 

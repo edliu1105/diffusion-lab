@@ -77,13 +77,13 @@ const lerp = (a, b, f) => a + (b - a) * f;
 
 export function drawMnist() {
   if (!A || !sprite) return;
-  const distill = S.mode === 'distill';
+  const distill = S.toyView === 'distill';
   document.getElementById('mn-tiles').style.display = distill ? 'none' : '';
   stripCv.parentElement.style.display = distill ? 'none' : '';
   pairDiv.style.display = distill ? '' : 'none';
-  traceDiv.style.display = (S.mode === 'infer' && traceImg && traceImg.width) ? '' : 'none';
+  traceDiv.style.display = (!distill && S.walkK > 0 && traceImg && traceImg.width) ? '' : 'none';
   if (distill) {
-    footEl.innerHTML = `多步教师沿轴碎步走 32 次;一步学生把整根轴一口吞掉(平均速度 ū)。同种子逐列对比:大形一致,笔画锐度是那 12% 的税。`;
+    footEl.innerHTML = `与探头 A 同一件事的图像版:教师沿轴走 32 步;一步学生(Geng et al. 2025 意义下的平均速度)把整根轴压成 1 次前向。同种子逐列对比:结构一致,损失的是笔画锐度(高频能量 88%)。`;
     return;
   }
 
