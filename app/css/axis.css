@@ -1,0 +1,55 @@
+/* λ 总控台 — one instrument, one state, three synced views. */
+
+.axis-body { overflow-x: hidden; }
+#ax-head {
+  display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap;
+  padding: 26px 40px 14px; border-bottom: 1px solid var(--line);
+}
+#ax-head h1 { font-size: 30px; font-weight: 250; letter-spacing: 0.08em; margin: 6px 0 4px; }
+#ax-head .sub { font-size: 13px; color: var(--ink2); max-width: 62em; }
+#ax-modes { margin-left: auto; }
+#ax-modes button { padding: 8px 18px; font-size: 14px; }
+.backlink { font-size: 12.5px; color: var(--ink3); white-space: nowrap; }
+
+#ax-main { padding: 0 40px 60px; max-width: 1560px; margin: 0 auto; }
+#ax-axis-wrap { padding: 14px 0 4px; }
+#ax-axis { display: block; width: 100%; }
+
+#ax-controls {
+  display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+  padding: 10px 2px 14px; border-bottom: 1px solid var(--line);
+}
+#ax-controls .grp { display: flex; gap: 8px; align-items: center; }
+#ax-controls label { font-size: 11.5px; color: var(--ink3); font-family: var(--mono); letter-spacing: 0.08em; white-space: nowrap; }
+#ax-controls input[type=range] { width: 120px; }
+#ax-controls .val { min-width: 34px; font-size: 12px; }
+#ax-controls .seg button { padding: 4px 10px; font-size: 12.5px; }
+
+#ax-probes { display: grid; grid-template-columns: minmax(430px, 560px) 1fr; gap: 26px; padding-top: 18px; align-items: start; }
+@media (max-width: 1100px) { #ax-probes { grid-template-columns: 1fr; } }
+.probe { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px 10px; }
+.probehead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.probehead .pid { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.22em; color: var(--data); }
+.probehead b { font-size: 14.5px; }
+.probehead .pnote { font-size: 11px; color: var(--ink3); margin-left: auto; }
+.probefoot { font-family: var(--mono); font-size: 11.5px; color: var(--ink2); padding-top: 8px; line-height: 1.7; min-height: 38px; }
+.probefoot b { color: var(--ink); font-weight: normal; }
+#ax-toy { display: block; width: 100%; border-radius: 6px; background: #0B0E12; cursor: crosshair; }
+
+/* MNIST probe */
+#ax-mnist { display: flex; flex-direction: column; gap: 10px; }
+.mn-row { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+.mn-cell { text-align: center; position: relative; }
+.mn-cell canvas { image-rendering: pixelated; border: 1px solid var(--line2); border-radius: 5px; background: #000; display: block; }
+.mn-cell.hl canvas { border-color: var(--data); box-shadow: 0 0 0 1px var(--data); }
+.mn-cap { font-family: var(--mono); font-size: 10px; color: var(--ink2); margin-top: 4px; line-height: 1.45; }
+.mn-cap b { color: var(--ink); font-weight: normal; }
+#mn-strip { position: relative; }
+#mn-strip canvas { display: block; border-radius: 4px; cursor: pointer; }
+#mn-pair { display: flex; gap: 12px; }
+
+#ax-foot { padding: 26px 2px 0; font-size: 11.5px; color: var(--ink3); font-family: var(--mono); line-height: 1.8; }
+#ax-foot a { color: var(--ddim); }
+
+/* cursor accent chip */
+.lamchip { font-family: var(--mono); font-size: 11px; padding: 1px 8px; border-radius: 4px; border: 1px solid; }
