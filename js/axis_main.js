@@ -12,7 +12,7 @@ export const S = {
   model: 'u_fm',
   sched: 'rf', N: 16, eta: 0,
   r: -5.5,
-  toyView: 'bridge',        // bridge | walk | distill
+  toyView: 'quad',          // quad | bridge | walk | distill
   playing: false, walkK: 0,
   vpreset: 'offline', vphase: 0,
 };
@@ -197,8 +197,11 @@ function togglePlay() {
   S.lam = grid[S.walkK];
   S.playing = true;
   el('ax-play').textContent = '⏸ 暂停';
-  document.querySelectorAll('#toy-tabs button').forEach(o => o.classList.toggle('on', o.dataset.v === 'walk'));
-  setS({ toyView: 'walk' });
+  if (S.toyView !== 'quad') {
+    document.querySelectorAll('#toy-tabs button').forEach(o => o.classList.toggle('on', o.dataset.v === 'walk'));
+    S.toyView = 'walk';
+  }
+  setS({});
 }
 
 boot();
