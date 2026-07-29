@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>λ 总控台 · 一根轴,整个领域</title>
+<link rel="stylesheet" href="css/lab.css">
+<link rel="stylesheet" href="css/axis.css">
+</head>
+<body class="axis-body">
+
+<header id="ax-head">
+  <div>
+    <div class="eyebrow">DIFFUSION BENCH · <span class="mode exp">仪器</span> · 所有模型现场推理,零示意图</div>
+    <h1>λ 总控台</h1>
+    <div class="sub">一根 logSNR 轴。调度是它的刻度,formulation 是它上面的坐标衣,训练是在它上面撒钱,推理是在它上面行走,蒸馏是在它上面跳跃。拖动游标,三个世界同步。</div>
+  </div>
+  <div id="ax-modes" class="seg">
+    <button data-m="train" class="on">训练</button><button data-m="infer">推理</button><button data-m="distill">蒸馏</button><button data-m="video">时间轴·视频</button>
+  </div>
+  <a href="index.html" class="backlink">← 实验室全册</a>
+</header>
+
+<main id="ax-main">
+  <!-- ═══════════ THE AXIS ═══════════ -->
+  <section id="ax-axis-wrap">
+    <canvas id="ax-axis"></canvas>
+    <div id="ax-controls">
+      <div class="grp" id="g-head"><label>坐标衣 head</label><div class="seg" id="ax-heads">
+        <button data-h="x0">x̂₀</button><button data-h="eps">ε̂</button><button data-h="v" class="on">v̂</button><button data-h="u">û</button><button data-h="score">score</button><button data-h="D">EDM-D</button>
+      </div></div>
+      <div class="grp" id="g-model"><label>场</label><select id="ax-model">
+        <option value="u_fm" selected>u_fm(真网络)</option>
+        <option value="analytic">解析真值</option>
+        <option value="eps_ddpm">eps_ddpm</option>
+        <option value="x0_edm">x0_edm</option>
+      </select></div>
+      <div class="grp" id="g-sched"><label>调度/网格</label><select id="ax-sched">
+        <option value="rf" selected>RF · 均匀 t</option>
+        <option value="rf_shift">RF + shift s=3(SD3)</option>
+        <option value="edm">EDM · Karras ρ=7</option>
+        <option value="cosine">VP-cosine · 均匀 t</option>
+        <option value="logsnr">均匀 λ(DDIM)</option>
+      </select></div>
+      <div class="grp" id="g-n"><label>步数 N</label><input type="range" id="ax-n" min="2" max="48" step="1" value="16"><span class="val" id="ax-nv">16</span></div>
+      <div class="grp" id="g-eta"><label>随机性 η/churn</label><input type="range" id="ax-eta" min="0" max="1" step="0.05" value="0"><span class="val" id="ax-etav">0.00</span></div>
+      <button class="primary" id="ax-play">▶ 行走</button>
+      <div class="grp" id="g-video" style="display:none"><label>帧调度</label><div class="seg" id="ax-vpreset">
+        <button data-v="offline" class="on">离线·整段</button><button data-v="df">Diffusion Forcing</button><button data-v="stream">流式 AR</button>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ TWO PROBES ═══════════ -->
+  <section id="ax-probes">
+    <div id="ax-toy-wrap" class="probe">
+      <div class="probehead"><span class="pid">探头 A</span><b>2D 玩具世界</b><span class="pnote" id="toy-note"></span></div>
+      <canvas id="ax-toy"></canvas>
+      <div class="probefoot" id="toy-foot"></div>
+    </div>
+    <div id="ax-mnist-wrap" class="probe">
+      <div class="probehead"><span class="pid">探头 B</span><b>MNIST 张量</b><span class="pnote" id="mn-note">真 UNet 输出,非示意</span></div>
+      <div id="ax-mnist"></div>
+      <div class="probefoot" id="mn-foot"></div>
+    </div>
+  </section>
+
+  <footer id="ax-foot">
+    快捷键:←→ 微调 λ · 空格 行走/暂停 · 记忆/动作/KV cache 不住在这根轴上,故不画。
+    全部数字可复算:模型与数据同 <a href="index.html">实验室</a>,浏览器↔PyTorch 对拍见 §11.3。
+  </footer>
+</main>
+
+<script type="module" src="js/axis_main.js"></script>
+</body>
+</html>
